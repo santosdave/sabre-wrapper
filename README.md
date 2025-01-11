@@ -7,11 +7,24 @@ A comprehensive Laravel wrapper for Sabre NDC APIs supporting both basic and adv
 ## Features
 
 - Support for both REST and SOAP APIs
-- Automatic token management and refresh
-- Session pool for SOAP APIs
-- Configurable retry strategies
+- Automatic token management with refresh and rotation
+- Session pool for SOAP APIs with automatic cleanup
+- Configurable rate limiting and retry strategies
 - Comprehensive error handling
 - Support for all major Sabre API services
+- Health monitoring and metrics
+- Distributed locking mechanism
+- Caching strategies with configurable TTLs
+- Full NDC (New Distribution Capability) support
+
+## Requirements
+
+- PHP 8.1 or higher
+- Laravel 8.0 or higher
+- PHP SOAP extension installed and enabled
+- Valid Sabre API credentials with appropriate access levels
+- Composer for package management
+- SSL support enabled
 
 ## Installation
 
@@ -19,7 +32,20 @@ A comprehensive Laravel wrapper for Sabre NDC APIs supporting both basic and adv
 composer require santosdave/sabre-wrapper
 ```
 
-The service provider will automatically register itself.
+The service provider will automatically register itself in Laravel 8+. For earlier versions, add the provider manually:
+
+```php
+// config/app.php
+'providers' => [
+    // ...
+    Santosdave\SabreWrapper\SabreServiceProvider::class,
+],
+
+'aliases' => [
+    // ...
+    'Sabre' => Santosdave\SabreWrapper\Facades\Sabre::class,
+]
+```
 
 ## Configuration
 
@@ -62,6 +88,7 @@ SABRE_SESSION_POOL_SIZE=5
 SABRE_SESSION_POOL_CLEANUP_INTERVAL=900
 SABRE_SESSION_POOL_LOCK_TIMEOUT=10
 
+
 # Request Settings
 SABRE_REQUEST_TIMEOUT=30
 SABRE_REQUEST_RETRIES=3
@@ -82,6 +109,10 @@ SABRE_CACHE_PREFIX=sabre:
 SABRE_LOGGING_ENABLED=true
 SABRE_LOG_CHANNEL=sabre
 SABRE_LOG_LEVEL=debug
+
+# Monitoring
+SABRE_HEALTH_CHECK_INTERVAL=60
+SABRE_HEALTH_NOTIFICATION_THRESHOLD=3
 
 # Queue Settings
 SABRE_DEFAULT_QUEUE=100
@@ -143,20 +174,56 @@ return [
 
 ## Basic Usage
 
+### Air Shopping
+
 ```php
 use Santosdave\SabreWrapper\Facades\Sabre;
 
-// Air Shopping
+// Create shopping request
+$request = new BargainFinderMaxRequest();
+$request->addOriginDestination(
+    'JFK',
+    'LHR',
+    '2024-03-15'
+);
+
+// Execute search
 $results = Sabre::shopping()->bargainFinderMax($request);
 
-// Air Booking
-$booking = Sabre::booking()->createPnr($request);
+// Access results
+foreach ($results->getOffers() as $offer) {
+    echo $offer['total_fare']['amount'];
+}
+```
 
-// Availability Check
-$availability = Sabre::availability()->getAvailability($request);
+### Order Management
 
-// Queue Management
-$queueList = Sabre::utility()->listQueue($request);
+```php
+// Create order
+$request = new OrderCreateRequest();
+$request->setOffer($offerId, [$offerItemId])
+    ->addPassenger(
+        'PAX1',
+        'John',
+        'Doe',
+        '1990-01-01',
+        'ADT',
+        'CONTACT1'
+    );
+
+$order = Sabre::order()->createOrder($request);
+
+// Fulfill order
+$fulfillRequest = new OrderFulfillRequest($order->getOrderId());
+$fulfillRequest->setPaymentCard(
+    $cardNumber,
+    $expirationDate,
+    $vendorCode,
+    $cvv,
+    $contactInfoRefId
+);
+
+$result = Sabre::order()->fulfillOrder($fulfillRequest);
 ```
 
 ## Service Types
@@ -170,6 +237,42 @@ $restShopping = Sabre::shopping();
 // SOAP Service
 $soapShopping = Sabre::shopping(ServiceFactory::SOAP);
 
+```
+
+## Advanced Features
+
+### Health Monitoring
+
+```php
+// Get service health status
+$health = Sabre::health()->checkStatus();
+
+// Get detailed metrics
+$metrics = Sabre::health()->getMetrics();
+```
+
+### Rate Limiting
+
+```php
+// Check current rate limit status
+$status = Sabre::getRateLimitStatus();
+
+// Handle rate limit exceeded
+try {
+    $results = Sabre::shopping()->bargainFinderMax($request);
+} catch (SabreRateLimitException $e) {
+    $retryAfter = $e->getRetryAfter();
+    $resetTime = $e->getReset();
+}
+```
+
+### Caching
+
+```php
+// Enable caching for specific requests
+$results = Cache::remember('flight_search_' . md5(serialize($params)), 300, function () use ($request) {
+    return Sabre::shopping()->bargainFinderMax($request);
+});
 ```
 
 ## Basic NDC Flow
@@ -187,63 +290,64 @@ The basic NDC flow consists of the following steps:
 ```php
 use Santosdave\SabreWrapper\Facades\Sabre;
 
-class FlightBookingController
-{
-    public function searchFlights(Request $request)
-    {
-        // 1. Shopping with BargainFinderMax
-        $shopRequest = new BargainFinderMaxRequest();
-        $shopRequest->addOriginDestination(
-            $request->origin,
-            $request->destination,
-            $request->departureDate
-        );
-        $shopRequest->addTraveler('ADT', 1); // 1 adult
+// 1. Shop for Offers
+$shopRequest = new BargainFinderMaxRequest();
+$shopRequest
+    ->addOriginDestination(
+        'JFK',
+        'LHR',
+        '2024-03-15'
+    )
+    ->setTravelPreferences([
+        'vendorPrefs' => ['AA', 'BA'],
+        'cabinPrefs' => ['Y']
+    ])
+    ->addTraveler('ADT', 1);
 
-        $shopResponse = Sabre::shopping()->bargainFinderMax($shopRequest);
+$shopResponse = Sabre::shopping()->bargainFinderMax($shopRequest);
 
-        // Get selected offer from response
-        $selectedOffer = $shopResponse->getOffers()[0];
+// 2. Price Verification
+$priceRequest = new OfferPriceRequest();
+$priceRequest
+    ->addOfferItem($shopResponse->getOffers()[0]['offerId'])
+    ->setCreditCard(
+        'MC',
+        '545251',
+        'FDA'
+    );
 
-        // 2. Price Verification
-        $priceRequest = new OfferPriceRequest();
-        $priceRequest->setOfferItem($selectedOffer['offerId']);
+$priceResponse = Sabre::pricing()->priceOffer($priceRequest);
 
-        $priceResponse = Sabre::pricing()->priceOffer($priceRequest);
+// 3. Create Booking
+$bookingRequest = new CreateBookingRequest();
+$bookingRequest
+    ->setFlightOffer(
+        $priceResponse->getOfferId(),
+        [$priceResponse->getOfferItemId()]
+    )
+    ->addTraveler(
+        'PAXID1',
+        'John',
+        'Doe',
+        '1990-01-01',
+        'ADT'
+    )
+    ->setContactInfo(
+        ['john@example.com'],
+        ['1234567890']
+    );
 
-        // 3. Create Booking
-        $bookingRequest = new CreateBookingRequest();
-        $bookingRequest->setFlightOffer(
-            $priceResponse->getOfferId(),
-            [$priceResponse->getOfferItemId()]
-        );
+$booking = Sabre::booking()->createBooking($bookingRequest);
 
-        // Add passenger details
-        $bookingRequest->addTraveler(
-            'PAXID1',
-            'John',
-            'Doe',
-            '1990-01-01',
-            'ADT'
-        );
+// 4. Get Booking Details
+$bookingDetails = Sabre::booking()->getBooking($booking->getConfirmationId());
 
-        // Add contact info
-        $bookingRequest->setContactInfo(
-            ['john@example.com'],
-            ['1234567890']
-        );
-
-        $bookingResponse = Sabre::booking()->createBooking($bookingRequest);
-
-        // Get confirmation ID
-        $confirmationId = $bookingResponse->getConfirmationId();
-
-        // 4. View Booking
-        $viewResponse = Sabre::booking()->getBooking($confirmationId);
-
-        return $viewResponse->getData();
-    }
-}
+// 5. Cancel if needed
+$cancelled = Sabre::booking()->cancelBooking(
+    $booking->getConfirmationId(),
+    true, // retrieveBooking
+    true  // cancelAll
+);
 ```
 
 ## Advanced NDC Flow
@@ -260,100 +364,101 @@ The advanced NDC flow provides more control and features:
 ### Example Implementation:
 
 ```php
-use Santosdave\SabreWrapper\Facades\Sabre;
+// 1. Create Order with Advanced Options
+$orderRequest = new OrderCreateRequest();
+$orderRequest
+    ->setOffer($priceResponse->getOfferId(), [$priceResponse->getOfferItemId()])
+    ->addPassenger(
+        'PAX1',
+        'ADT',
+        'John',
+        'Doe',
+        '1990-01-01'
+    )
+    ->addContactInfo(
+        'CI-1',
+        ['john@example.com'],
+        ['1234567890']
+    );
 
-class FlightOrderController
-{
-    public function createOrder(Request $request)
-    {
-        // 1. Shopping with BargainFinderMax
-        $shopRequest = new BargainFinderMaxRequest();
-        $shopRequest->addOriginDestination(
-            $request->origin,
-            $request->destination,
-            $request->departureDate
-        );
-        $shopRequest->setTravelPreferences([
-            'preferredCarriers' => ['AA', 'BA'],
-            'cabinPreferences' => ['Y']
-        ]);
+$orderResponse = Sabre::order()->createOrder($orderRequest);
 
-        $shopResponse = Sabre::shopping()->bargainFinderMax($shopRequest);
+// 2. Order Fulfillment with Payment
+$fulfillRequest = new OrderFulfillRequest($orderResponse->getOrderId());
+$fulfillRequest
+    ->setPaymentCard(
+        $cardNumber,
+        $expirationDate,
+        $vendorCode,
+        $cvv,
+        'CI-1'
+    )
+    ->setAmount(161.60, 'USD');
 
-        // 2. Price Verification
-        $priceRequest = new OfferPriceRequest();
-        $priceRequest->setOfferItem($shopResponse->getOffers()[0]['offerId']);
-        $priceRequest->setCreditCard(
-            'MC',
-            '545251',
-            'FDA'
-        );
+$fulfillResponse = Sabre::order()->fulfillOrder($fulfillRequest);
 
-        $priceResponse = Sabre::pricing()->priceOffer($priceRequest);
+// 3. Add Ancillary Services
+$ancillaryRequest = new AncillaryRequest();
+$ancillaryRequest
+    ->setTravelAgencyParty($pseudoCityId, $agencyId)
+    ->addFlightSegment(
+        'SEG1',
+        'JFK',
+        'LHR',
+        '2024-03-15',
+        'AA',
+        '100',
+        'Y'
+    );
 
-        // 3. Create Order
-        $orderRequest = new OrderCreateRequest();
-        $orderRequest->setOffer(
-            $priceResponse->getOfferId(),
-            [$priceResponse->getOfferItemId()]
-        );
+$ancillaries = Sabre::ancillary()->getAncillaries($ancillaryRequest);
 
-        // Add passenger
-        $orderRequest->addPassenger(
-            'PAXID1',
-            'John',
-            'Doe',
-            '1990-01-01',
-            'ADT',
-            'john@example.com'
-        );
+// 4. Seat Assignment
+$seatRequest = new SeatAssignRequest($orderResponse->getOrderId());
+$seatRequest
+    ->addSeatAssignment('PAX1', 'SEG1', '12A')
+    ->setPaymentCard(
+        $cardNumber,
+        $expirationDate,
+        $cardCode,
+        $cardType,
+        50.00,
+        'USD'
+    );
 
-        // Add contact info
-        $orderRequest->addContactInfo(
-            'CI-1',
-            ['john@example.com'],
-            ['1234567890']
-        );
+$seatResponse = Sabre::seat()->assignSeats($seatRequest);
 
-        $orderResponse = Sabre::order()->createOrder($orderRequest);
+// 5. Order Management
+// View Order
+$viewRequest = new OrderViewRequest($orderResponse->getOrderId());
+$orderDetails = Sabre::order()->viewOrder($viewRequest);
 
-        // 4. Fulfill Order with Payment
-        $fulfillRequest = new OrderFulfillRequest($orderResponse->getOrderId());
-        $fulfillRequest->setCreditCardPayment(
-            '4111111111111111',
-            '2025-12',
-            '123',
-            'VI',
-            1000.00,
-            'USD',
-            'CI-1'
-        );
+// Change Order
+$changeRequest = new OrderChangeRequest($orderResponse->getOrderId());
+$changeRequest->addModifyPassengerAction('PAX1', [
+    'contactInfo' => ['email' => 'newemail@example.com']
+]);
+$changeResponse = Sabre::order()->changeOrder($changeRequest);
 
-        $fulfillResponse = Sabre::order()->fulfillOrder($fulfillRequest);
+// Split Order
+$splitRequest = new OrderSplitRequest($orderResponse->getOrderId());
+$splitRequest->addSplitItem('ITEM1', ['PAX1']);
+$splitResponse = Sabre::order()->splitOrder($splitRequest);
 
-        return $fulfillResponse->getData();
-    }
+// Exchange Order
+$exchangeRequest = new OrderExchangeRequest($orderResponse->getOrderId());
+$exchangeRequest
+    ->addExchangeItem('ITEM1')
+    ->setNewItinerary($newFlightDetails)
+    ->setPaymentCard(
+        $cardNumber,
+        $expirationDate,
+        $vendorCode,
+        $cvv,
+        'CI-1'
+    );
 
-    // Add seats to order
-    public function addSeats(string $orderId)
-    {
-        // Get seat map
-        $seatRequest = new SeatMapRequest();
-        $seatRequest->setOrderId($orderId);
-
-        $seatMap = Sabre::seats()->getSeatMap($seatRequest);
-
-        // Assign seats
-        $assignRequest = new SeatAssignRequest($orderId);
-        $assignRequest->addSeatAssignment(
-            'PAXID1',
-            'SEG1',
-            '12A'
-        );
-
-        return Sabre::seats()->assignSeats($assignRequest);
-    }
-}
+$exchangeResponse = Sabre::order()->exchangeOrder($exchangeRequest);
 ```
 
 ## Key Differences Between Basic and Advanced NDC Flows
@@ -390,25 +495,26 @@ class FlightOrderController
 
 ## Error Handling
 
-The wrapper provides specific exception classes for different types of errors:
-
 ```php
-use Santosdave\SabreWrapper\Exceptions\SabreApiException;
-use Santosdave\SabreWrapper\Exceptions\SabreAuthenticationException;
-use Santosdave\SabreWrapper\Exceptions\SabreAuthorizationException;
-use Santosdave\SabreWrapper\Exceptions\SabreRateLimitException;
-
 try {
-    $results = Sabre::shopping()->bargainFinderMax($request);
+    $response = Sabre::booking()->createBooking($request);
+} catch (SabreAuthenticationException $e) {
+    // Handle authentication errors
+    Log::error('Authentication failed', [
+        'error' => $e->getMessage(),
+        'code' => $e->getCode()
+    ]);
 } catch (SabreRateLimitException $e) {
     // Handle rate limiting
-    $retryAfter = $e->getRetryAfter();
-} catch (SabreAuthenticationException $e) {
-    // Handle authentication failures
-} catch (SabreAuthorizationException $e) {
-    // Handle authorization failures
+    Log::warning('Rate limit exceeded', [
+        'retry_after' => $e->getRetryAfter()
+    ]);
 } catch (SabreApiException $e) {
-    // Handle other API errors
+    // Handle general API errors
+    Log::error('API error', [
+        'message' => $e->getMessage(),
+        'details' => $e->getErrorDetails()
+    ]);
 }
 ```
 
