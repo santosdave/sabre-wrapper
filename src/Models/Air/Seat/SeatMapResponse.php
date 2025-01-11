@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Seat;
+namespace Santosdave\SabreWrapper\Models\Air\Seat;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class SeatMapResponse implements SabreResponse
 {

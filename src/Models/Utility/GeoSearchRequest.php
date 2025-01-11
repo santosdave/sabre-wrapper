@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Utility;
+namespace Santosdave\SabreWrapper\Models\Utility;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class GeoSearchRequest implements SabreRequest
 {

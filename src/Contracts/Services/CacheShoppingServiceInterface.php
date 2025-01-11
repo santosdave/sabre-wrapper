@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\Cache\InstaFlightsRequest;
-use Santosdave\Sabre\Models\Air\Cache\DestinationFinderRequest;
-use Santosdave\Sabre\Models\Air\Cache\LeadPriceCalendarRequest;
+use Santosdave\SabreWrapper\Models\Air\Cache\InstaFlightsRequest;
+use Santosdave\SabreWrapper\Models\Air\Cache\DestinationFinderRequest;
+use Santosdave\SabreWrapper\Models\Air\Cache\LeadPriceCalendarRequest;
 
 interface CacheShoppingServiceInterface
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Intelligence;
+namespace Santosdave\SabreWrapper\Models\Intelligence;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class SeasonalityRequest implements SabreRequest
 {

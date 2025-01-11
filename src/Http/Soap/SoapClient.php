@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Http\Soap;
+namespace Santosdave\SabreWrapper\Http\Soap;
 
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Http\Soap\XMLBuilder;
-use Santosdave\Sabre\Services\Core\RetryService;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Http\Soap\XMLBuilder;
+use Santosdave\SabreWrapper\Services\Core\RetryService;
 
 class SoapClient
 {

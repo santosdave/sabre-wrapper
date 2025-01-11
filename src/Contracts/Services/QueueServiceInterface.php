@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Queue\QueueListRequest;
-use Santosdave\Sabre\Models\Queue\QueueListResponse;
-use Santosdave\Sabre\Models\Queue\QueuePlaceRequest;
-use Santosdave\Sabre\Models\Queue\QueueRemoveRequest;
+use Santosdave\SabreWrapper\Models\Queue\QueueListRequest;
+use Santosdave\SabreWrapper\Models\Queue\QueueListResponse;
+use Santosdave\SabreWrapper\Models\Queue\QueuePlaceRequest;
+use Santosdave\SabreWrapper\Models\Queue\QueueRemoveRequest;
 
 interface QueueServiceInterface
 {

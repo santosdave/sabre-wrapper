@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Auth;
+namespace Santosdave\SabreWrapper\Models\Auth;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class TokenResponse implements SabreResponse
 {

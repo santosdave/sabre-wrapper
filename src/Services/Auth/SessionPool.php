@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Auth;
+namespace Santosdave\SabreWrapper\Services\Auth;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\Auth\SabreAuthenticationException;
+use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 
 class SessionPool
 {

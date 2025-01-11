@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre;
+namespace Santosdave\SabreWrapper;
 
 use Illuminate\Support\ServiceProvider;
-use Santosdave\Sabre\Services\Auth\SabreAuthenticator;
-use Santosdave\Sabre\Services\ServiceFactory;
+use Santosdave\SabreWrapper\Services\Auth\SabreAuthenticator;
+use Santosdave\SabreWrapper\Services\ServiceFactory;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use Santosdave\Sabre\Contracts\Services\QueueServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\QueueServiceInterface;
 
 class SabreServiceProvider extends ServiceProvider
 {

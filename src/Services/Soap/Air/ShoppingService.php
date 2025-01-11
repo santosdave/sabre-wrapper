@@ -1,12 +1,12 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Soap\Air;
+namespace Santosdave\SabreWrapper\Services\Soap\Air;
 
-use Santosdave\Sabre\Services\Base\BaseSoapService;
-use Santosdave\Sabre\Contracts\Services\AirShoppingServiceInterface;
-use Santosdave\Sabre\Models\Air\BargainFinderMaxRequest;
-use Santosdave\Sabre\Models\Air\BargainFinderMaxResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseSoapService;
+use Santosdave\SabreWrapper\Contracts\Services\AirShoppingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxRequest;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class ShoppingService extends BaseSoapService implements AirShoppingServiceInterface
 {

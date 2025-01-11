@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryRequest;
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryResponse;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryRequest;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryResponse;
 
 interface AncillaryServiceInterface
 {

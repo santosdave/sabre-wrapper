@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeSearchRequest;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeSearchResponse;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeBookRequest;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeBookResponse;
-use Santosdave\Sabre\Models\Air\Exchange\RefundQuoteRequest;
-use Santosdave\Sabre\Models\Air\Exchange\RefundQuoteResponse;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeSearchRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeSearchResponse;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeBookRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeBookResponse;
+use Santosdave\SabreWrapper\Models\Air\Exchange\RefundQuoteRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\RefundQuoteResponse;
 
 interface ExchangeServiceInterface
 {

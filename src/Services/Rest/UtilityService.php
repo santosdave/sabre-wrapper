@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest;
+namespace Santosdave\SabreWrapper\Services\Rest;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\UtilityServiceInterface;
-use Santosdave\Sabre\Models\Utility\GeoSearchRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
+use Santosdave\SabreWrapper\Models\Utility\GeoSearchRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class UtilityService extends BaseRestService implements UtilityServiceInterface
 {

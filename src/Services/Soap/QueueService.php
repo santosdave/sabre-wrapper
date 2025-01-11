@@ -1,14 +1,14 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Soap;
+namespace Santosdave\SabreWrapper\Services\Soap;
 
-use Santosdave\Sabre\Services\Base\BaseSoapService;
-use Santosdave\Sabre\Contracts\Services\QueueServiceInterface;
-use Santosdave\Sabre\Models\Queue\QueueListRequest;
-use Santosdave\Sabre\Models\Queue\QueueListResponse;
-use Santosdave\Sabre\Models\Queue\QueuePlaceRequest;
-use Santosdave\Sabre\Models\Queue\QueueRemoveRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseSoapService;
+use Santosdave\SabreWrapper\Contracts\Services\QueueServiceInterface;
+use Santosdave\SabreWrapper\Models\Queue\QueueListRequest;
+use Santosdave\SabreWrapper\Models\Queue\QueueListResponse;
+use Santosdave\SabreWrapper\Models\Queue\QueuePlaceRequest;
+use Santosdave\SabreWrapper\Models\Queue\QueueRemoveRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class QueueService extends BaseSoapService implements QueueServiceInterface
 {

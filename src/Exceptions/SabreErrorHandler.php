@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Exceptions;
+namespace Santosdave\SabreWrapper\Exceptions;
 
-use Santosdave\Sabre\Exceptions\Auth\SabreAuthenticationException;
+use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 
-class SabreErrorHandler 
+class SabreErrorHandler
 {
     // Sabre specific error codes and their meanings
     private const ERROR_CODES = [
@@ -22,10 +22,10 @@ class SabreErrorHandler
     private const MAX_RETRIES = 3;
     private const RETRY_DELAY_MS = 1000; // 1 second
 
-    public static function handleError(string $errorCode, string $message, int $retryCount = 0): void 
+    public static function handleError(string $errorCode, string $message, int $retryCount = 0): void
     {
         $errorInfo = self::ERROR_CODES[$errorCode] ?? ['code' => 500, 'retry' => false];
-        
+
         // Log the error
         self::logError($errorCode, $message, $errorInfo);
 
@@ -39,7 +39,7 @@ class SabreErrorHandler
         self::throwException($errorCode, $message, $errorInfo);
     }
 
-    private static function handleRetry(string $errorCode, string $message, int $retryCount): void 
+    private static function handleRetry(string $errorCode, string $message, int $retryCount): void
     {
         // Wait before retry
         usleep(self::RETRY_DELAY_MS * 1000 * ($retryCount + 1));
@@ -55,7 +55,7 @@ class SabreErrorHandler
         ]);
     }
 
-    private static function logError(string $errorCode, string $message, array $errorInfo): void 
+    private static function logError(string $errorCode, string $message, array $errorInfo): void
     {
         $context = [
             'error_code' => $errorCode,
@@ -67,7 +67,7 @@ class SabreErrorHandler
         \Illuminate\Support\Facades\Log::error('Sabre API Error', $context);
     }
 
-    private static function throwException(string $errorCode, string $message, array $errorInfo): void 
+    private static function throwException(string $errorCode, string $message, array $errorInfo): void
     {
         switch ($errorInfo['code']) {
             case 401:

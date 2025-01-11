@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Queue;
+namespace Santosdave\SabreWrapper\Models\Queue;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class QueuePlaceRequest implements SabreRequest
 {

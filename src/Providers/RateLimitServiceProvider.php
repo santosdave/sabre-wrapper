@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Providers;
+namespace Santosdave\SabreWrapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Santosdave\Sabre\Services\Core\RateLimitService;
-use Santosdave\Sabre\Http\Middleware\RateLimitMiddleware;
+use Santosdave\SabreWrapper\Services\Core\RateLimitService;
+use Santosdave\SabreWrapper\Http\Middleware\RateLimitMiddleware;
 
 class RateLimitServiceProvider extends ServiceProvider
 {

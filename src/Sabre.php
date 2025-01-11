@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre;
+namespace Santosdave\SabreWrapper;
 
 use Psr\Log\LoggerInterface;
-use Santosdave\Sabre\Services\ServiceFactory;
-use Santosdave\Sabre\Contracts\Services\AirShoppingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirBookingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirAvailabilityServiceInterface;
-use Santosdave\Sabre\Contracts\Services\UtilityServiceInterface;
+use Santosdave\SabreWrapper\Services\ServiceFactory;
+use Santosdave\SabreWrapper\Contracts\Services\AirShoppingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
 
 class Sabre
 {

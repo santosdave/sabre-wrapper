@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Queue;
+namespace Santosdave\SabreWrapper\Models\Queue;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class QueueListResponse implements SabreResponse
 {

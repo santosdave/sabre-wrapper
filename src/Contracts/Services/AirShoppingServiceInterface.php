@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\BargainFinderMaxRequest;
-use Santosdave\Sabre\Models\Air\BargainFinderMaxResponse;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxRequest;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxResponse;
 
 interface AirShoppingServiceInterface
 {

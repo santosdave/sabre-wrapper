@@ -1,6 +1,6 @@
 <?php
 
-namespace Santosdave\Sabre\Notifications;
+namespace Santosdave\SabreWrapper\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;

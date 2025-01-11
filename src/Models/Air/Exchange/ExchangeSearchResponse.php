@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Exchange;
+namespace Santosdave\SabreWrapper\Models\Air\Exchange;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class ExchangeSearchResponse implements SabreResponse
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Exchange;
+namespace Santosdave\SabreWrapper\Models\Air\Exchange;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class ExchangeBookRequest implements SabreRequest
 {

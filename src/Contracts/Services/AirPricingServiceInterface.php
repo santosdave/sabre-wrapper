@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\OfferPriceRequest;
-use Santosdave\Sabre\Models\Air\OfferPriceResponse;
-use Santosdave\Sabre\Models\Air\Pricing\PriceItineraryRequest;
-use Santosdave\Sabre\Models\Air\Pricing\PriceItineraryResponse;
-use Santosdave\Sabre\Models\Air\Pricing\ValidatePriceRequest;
-use Santosdave\Sabre\Models\Air\Pricing\ValidatePriceResponse;
+use Santosdave\SabreWrapper\Models\Air\OfferPriceRequest;
+use Santosdave\SabreWrapper\Models\Air\OfferPriceResponse;
+use Santosdave\SabreWrapper\Models\Air\Pricing\PriceItineraryRequest;
+use Santosdave\SabreWrapper\Models\Air\Pricing\PriceItineraryResponse;
+use Santosdave\SabreWrapper\Models\Air\Pricing\ValidatePriceRequest;
+use Santosdave\SabreWrapper\Models\Air\Pricing\ValidatePriceResponse;
 
 interface AirPricingServiceInterface
 {

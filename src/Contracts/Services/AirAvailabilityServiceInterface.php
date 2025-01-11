@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\AvailabilityRequest;
-use Santosdave\Sabre\Models\Air\AvailabilityResponse;
+use Santosdave\SabreWrapper\Models\Air\AvailabilityRequest;
+use Santosdave\SabreWrapper\Models\Air\AvailabilityResponse;
 
 interface AirAvailabilityServiceInterface
 {

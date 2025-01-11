@@ -1,12 +1,12 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Soap\Air;
+namespace Santosdave\SabreWrapper\Services\Soap\Air;
 
-use Santosdave\Sabre\Services\Base\BaseSoapService;
-use Santosdave\Sabre\Contracts\Services\AirAvailabilityServiceInterface;
-use Santosdave\Sabre\Models\Air\AvailabilityRequest;
-use Santosdave\Sabre\Models\Air\AvailabilityResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseSoapService;
+use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\AvailabilityRequest;
+use Santosdave\SabreWrapper\Models\Air\AvailabilityResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class AvailabilityService extends BaseSoapService implements AirAvailabilityServiceInterface
 {

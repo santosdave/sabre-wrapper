@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\AirShoppingServiceInterface;
-use Santosdave\Sabre\Models\Air\BargainFinderMaxRequest;
-use Santosdave\Sabre\Models\Air\BargainFinderMaxResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Helpers\CacheableRequest;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\AirShoppingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxRequest;
+use Santosdave\SabreWrapper\Models\Air\BargainFinderMaxResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Helpers\CacheableRequest;
 
 class ShoppingService extends BaseRestService implements AirShoppingServiceInterface
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Soap;
+namespace Santosdave\SabreWrapper\Services\Soap;
 
-use Santosdave\Sabre\Services\Base\BaseSoapService;
-use Santosdave\Sabre\Contracts\Services\UtilityServiceInterface;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseSoapService;
+use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class UtilityService extends BaseSoapService implements UtilityServiceInterface
 {

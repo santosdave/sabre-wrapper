@@ -1,6 +1,6 @@
 <?php
 
-namespace Santosdave\Sabre\Exceptions;
+namespace Santosdave\SabreWrapper\Exceptions;
 
 class SabreRateLimitException extends SabreApiException
 {

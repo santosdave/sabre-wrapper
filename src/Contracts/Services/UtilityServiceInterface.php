@@ -1,6 +1,6 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
 interface UtilityServiceInterface
 {

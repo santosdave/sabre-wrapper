@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Auth;
+namespace Santosdave\SabreWrapper\Services\Auth;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class DistributedLockService
 {

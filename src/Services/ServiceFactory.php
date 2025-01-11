@@ -1,21 +1,21 @@
 <?php
 
-namespace Santosdave\Sabre\Services;
+namespace Santosdave\SabreWrapper\Services;
 
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Contracts\Services\AirAvailabilityServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirBookingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirIntelligenceServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirPricingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AirShoppingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\AncillaryServiceInterface;
-use Santosdave\Sabre\Contracts\Services\CacheShoppingServiceInterface;
-use Santosdave\Sabre\Contracts\Services\ExchangeServiceInterface;
-use Santosdave\Sabre\Contracts\Services\OrderManagementServiceInterface;
-use Santosdave\Sabre\Contracts\Services\QueueServiceInterface;
-use Santosdave\Sabre\Contracts\Services\SeatServiceInterface;
-use Santosdave\Sabre\Contracts\Services\UtilityServiceInterface;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirIntelligenceServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirPricingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirShoppingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AncillaryServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\CacheShoppingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\ExchangeServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\OrderManagementServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\QueueServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\SeatServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class ServiceFactory
 {

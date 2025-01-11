@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\CacheShoppingServiceInterface;
-use Santosdave\Sabre\Models\Air\Cache\InstaFlightsRequest;
-use Santosdave\Sabre\Models\Air\Cache\DestinationFinderRequest;
-use Santosdave\Sabre\Models\Air\Cache\LeadPriceCalendarRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\CacheShoppingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\Cache\InstaFlightsRequest;
+use Santosdave\SabreWrapper\Models\Air\Cache\DestinationFinderRequest;
+use Santosdave\SabreWrapper\Models\Air\Cache\LeadPriceCalendarRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class CacheShoppingService extends BaseRestService implements CacheShoppingServiceInterface
 {

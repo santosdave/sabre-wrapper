@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Http\Middleware;
+namespace Santosdave\SabreWrapper\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Santosdave\Sabre\Services\Core\RateLimitService;
-use Santosdave\Sabre\Exceptions\SabreRateLimitException;
+use Santosdave\SabreWrapper\Services\Core\RateLimitService;
+use Santosdave\SabreWrapper\Exceptions\SabreRateLimitException;
 
 class RateLimitMiddleware
 {

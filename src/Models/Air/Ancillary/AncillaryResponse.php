@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Ancillary;
+namespace Santosdave\SabreWrapper\Models\Air\Ancillary;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class AncillaryResponse implements SabreResponse
 {

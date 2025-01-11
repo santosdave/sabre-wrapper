@@ -1,24 +1,24 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\OrderManagementServiceInterface;
-use Santosdave\Sabre\Models\Air\Order\OrderCreateRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderCreateResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderViewRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderViewResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderChangeRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderChangeResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Models\Air\Order\OrderCancelRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderCancelResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderExchangeRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderExchangeResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderFulfillRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderFulfillResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderSplitRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderSplitResponse;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\OrderManagementServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCreateRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCreateResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderViewRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderViewResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderChangeRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderChangeResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCancelRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCancelResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderExchangeRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderExchangeResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderFulfillRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderFulfillResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderSplitRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderSplitResponse;
 
 class OrderManagementService extends BaseRestService implements OrderManagementServiceInterface
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Order;
+namespace Santosdave\SabreWrapper\Models\Air\Order;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class OrderCreateRequest implements SabreRequest
 {

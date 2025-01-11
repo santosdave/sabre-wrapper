@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Core;
+namespace Santosdave\SabreWrapper\Services\Core;
 
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Exceptions\SabreRateLimitException;
-use Santosdave\Sabre\Exceptions\Auth\SabreAuthenticationException;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Exceptions\SabreRateLimitException;
+use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 
 class RetryService
 {

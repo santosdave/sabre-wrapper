@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air;
+namespace Santosdave\SabreWrapper\Models\Air;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class CreatePnrRequest implements SabreRequest
 {
@@ -197,7 +197,7 @@ class CreatePnrRequest implements SabreRequest
     }
 }
 
-class CreatePnrResponse implements \Santosdave\Sabre\Contracts\SabreResponse
+class CreatePnrResponse implements \Santosdave\SabreWrapper\Contracts\SabreResponse
 {
     private bool $success;
     private array $errors = [];
@@ -358,7 +358,8 @@ class EnhancedAirBookRequest implements SabreRequest
 }
 
 
-class PassengerDetailsRequest implements SabreRequest {
+class PassengerDetailsRequest implements SabreRequest
+{
     public function validate(): bool
     {
         return true;

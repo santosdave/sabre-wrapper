@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Helpers\Air;
+namespace Santosdave\SabreWrapper\Helpers\Air;
 
-use Santosdave\Sabre\Services\Rest\Air\AncillaryService;
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryRequest;
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Rest\Air\AncillaryService;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryRequest;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class AncillaryHelper
 {

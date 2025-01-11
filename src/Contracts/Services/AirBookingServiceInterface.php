@@ -1,14 +1,14 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\Booking\CreateBookingRequest;
-use Santosdave\Sabre\Models\Air\Booking\CreateBookingResponse;
-use Santosdave\Sabre\Models\Air\CreatePnrRequest;
-use Santosdave\Sabre\Models\Air\CreatePnrResponse;
-use Santosdave\Sabre\Models\Air\EnhancedAirBookRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderCancelResponse;
-use Santosdave\Sabre\Models\Air\PassengerDetailsRequest;
+use Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingRequest;
+use Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingResponse;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrRequest;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrResponse;
+use Santosdave\SabreWrapper\Models\Air\EnhancedAirBookRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCancelResponse;
+use Santosdave\SabreWrapper\Models\Air\PassengerDetailsRequest;
 
 interface AirBookingServiceInterface
 {
@@ -18,12 +18,12 @@ interface AirBookingServiceInterface
     public function cancelPnr(string $pnr): bool;
 
 
-     // NDC Basic Flow Methods
-     public function createBooking(CreateBookingRequest $request): CreateBookingResponse;
-     public function getBooking(string $confirmationId): CreateBookingResponse;
-     public function cancelBooking(
-         string $confirmationId,
-         bool $retrieveBooking = true,
-         bool $cancelAll = true
-     ): OrderCancelResponse;
+    // NDC Basic Flow Methods
+    public function createBooking(CreateBookingRequest $request): CreateBookingResponse;
+    public function getBooking(string $confirmationId): CreateBookingResponse;
+    public function cancelBooking(
+        string $confirmationId,
+        bool $retrieveBooking = true,
+        bool $cancelAll = true
+    ): OrderCancelResponse;
 }

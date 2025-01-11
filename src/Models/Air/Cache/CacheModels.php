@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Cache;
+namespace Santosdave\SabreWrapper\Models\Air\Cache;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class InstaFlightsRequest implements SabreRequest
 {

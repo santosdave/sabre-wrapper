@@ -1,13 +1,13 @@
 <?php
 
-namespace Santosdave\Sabre\Helpers\Air;
+namespace Santosdave\SabreWrapper\Helpers\Air;
 
-use Santosdave\Sabre\Services\Rest\Air\SeatService;
-use Santosdave\Sabre\Models\Air\Seat\SeatMapRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatMapResponse;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Rest\Air\SeatService;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapResponse;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class SeatHelper
 {

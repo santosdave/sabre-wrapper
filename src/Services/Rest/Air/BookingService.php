@@ -1,17 +1,17 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\AirBookingServiceInterface;
-use Santosdave\Sabre\Models\Air\CreatePnrRequest;
-use Santosdave\Sabre\Models\Air\CreatePnrResponse;
-use Santosdave\Sabre\Models\Air\EnhancedAirBookRequest;
-use Santosdave\Sabre\Models\Air\PassengerDetailsRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Models\Air\Booking\CreateBookingRequest;
-use Santosdave\Sabre\Models\Air\Booking\CreateBookingResponse;
-use Santosdave\Sabre\Models\Air\Order\OrderCancelResponse;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrRequest;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrResponse;
+use Santosdave\SabreWrapper\Models\Air\EnhancedAirBookRequest;
+use Santosdave\SabreWrapper\Models\Air\PassengerDetailsRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingRequest;
+use Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingResponse;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderCancelResponse;
 
 class BookingService extends BaseRestService implements AirBookingServiceInterface
 {

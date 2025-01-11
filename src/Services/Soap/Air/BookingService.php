@@ -1,30 +1,30 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Soap\Air;
+namespace Santosdave\SabreWrapper\Services\Soap\Air;
 
-use Santosdave\Sabre\Services\Base\BaseSoapService;
-use Santosdave\Sabre\Contracts\Services\AirBookingServiceInterface;
-use Santosdave\Sabre\Models\Air\CreatePnrRequest;
-use Santosdave\Sabre\Models\Air\CreatePnrResponse;
-use Santosdave\Sabre\Models\Air\EnhancedAirBookRequest;
-use Santosdave\Sabre\Models\Air\PassengerDetailsRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseSoapService;
+use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrRequest;
+use Santosdave\SabreWrapper\Models\Air\CreatePnrResponse;
+use Santosdave\SabreWrapper\Models\Air\EnhancedAirBookRequest;
+use Santosdave\SabreWrapper\Models\Air\PassengerDetailsRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class BookingService extends BaseSoapService implements AirBookingServiceInterface
 {
-    public function createBooking(\Santosdave\Sabre\Models\Air\Booking\CreateBookingRequest $request): \Santosdave\Sabre\Models\Air\Booking\CreateBookingResponse
+    public function createBooking(\Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingRequest $request): \Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingResponse
     {
         // Implement the createBooking method
         throw new \Exception('Method createBooking() is not implemented.');
     }
 
-    public function getBooking(string $confirmationId): \Santosdave\Sabre\Models\Air\Booking\CreateBookingResponse
+    public function getBooking(string $confirmationId): \Santosdave\SabreWrapper\Models\Air\Booking\CreateBookingResponse
     {
         // Implement the getBooking method
         throw new \Exception('Method getBooking() is not implemented.');
     }
 
-    public function cancelBooking(string $confirmationId, bool $retrieveBooking = true, bool $cancelAll = true): \Santosdave\Sabre\Models\Air\Order\OrderCancelResponse
+    public function cancelBooking(string $confirmationId, bool $retrieveBooking = true, bool $cancelAll = true): \Santosdave\SabreWrapper\Models\Air\Order\OrderCancelResponse
     {
         // Implement the cancelBooking method
         throw new \Exception('Method cancelBooking() is not implemented.');

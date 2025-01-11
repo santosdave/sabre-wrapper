@@ -1,16 +1,16 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Core;
+namespace Santosdave\SabreWrapper\Services\Core;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Services\Auth\SabreAuthenticator;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Auth\SabreAuthenticator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use Santosdave\Sabre\Notifications\HealthCheckAlert;
+use Santosdave\SabreWrapper\Notifications\HealthCheckAlert;
 
 class HealthCheckService
 {

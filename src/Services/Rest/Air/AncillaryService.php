@@ -1,12 +1,12 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\AncillaryServiceInterface;
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryRequest;
-use Santosdave\Sabre\Models\Air\Ancillary\AncillaryResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\AncillaryServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryRequest;
+use Santosdave\SabreWrapper\Models\Air\Ancillary\AncillaryResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class AncillaryService extends BaseRestService implements AncillaryServiceInterface
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Booking;
+namespace Santosdave\SabreWrapper\Models\Air\Booking;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class CreateBookingResponse implements SabreResponse
 {

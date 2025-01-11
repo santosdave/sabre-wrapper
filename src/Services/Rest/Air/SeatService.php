@@ -1,15 +1,15 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\SeatServiceInterface;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\SeatServiceInterface;
 
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignResponse;
-use Santosdave\Sabre\Models\Air\Seat\SeatMapRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatMapResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignResponse;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapResponse;
 
 class SeatService extends BaseRestService implements SeatServiceInterface
 {

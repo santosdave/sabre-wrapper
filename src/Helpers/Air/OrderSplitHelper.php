@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Helpers\Air;
+namespace Santosdave\SabreWrapper\Helpers\Air;
 
-use Santosdave\Sabre\Services\Rest\Air\OrderManagementService;
-use Santosdave\Sabre\Models\Air\Order\OrderSplitRequest;
-use Santosdave\Sabre\Models\Air\Order\OrderSplitResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Rest\Air\OrderManagementService;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderSplitRequest;
+use Santosdave\SabreWrapper\Models\Air\Order\OrderSplitResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 use Illuminate\Support\Facades\Log;
 
 class OrderSplitHelper

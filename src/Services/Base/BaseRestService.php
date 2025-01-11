@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Base;
+namespace Santosdave\SabreWrapper\Services\Base;
 
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Http\Rest\RestClient;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Http\Rest\RestClient;
 
 abstract class BaseRestService
 {

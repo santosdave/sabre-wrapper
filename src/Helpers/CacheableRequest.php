@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Helpers;
+namespace Santosdave\SabreWrapper\Helpers;
 
-use Santosdave\Sabre\Services\Cache\SabreCacheService;
+use Santosdave\SabreWrapper\Services\Cache\SabreCacheService;
 
 trait CacheableRequest
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Pricing;
+namespace Santosdave\SabreWrapper\Models\Air\Pricing;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class PriceItineraryResponse implements SabreResponse
 {

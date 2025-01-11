@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Intelligence\SeasonalityRequest;
-use Santosdave\Sabre\Models\Intelligence\LowFareHistoryRequest;
+use Santosdave\SabreWrapper\Models\Intelligence\SeasonalityRequest;
+use Santosdave\SabreWrapper\Models\Intelligence\LowFareHistoryRequest;
 
 interface AirIntelligenceServiceInterface
 {

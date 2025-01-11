@@ -1,6 +1,6 @@
 <?php
 
-namespace Santosdave\Sabre\Facades;
+namespace Santosdave\SabreWrapper\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

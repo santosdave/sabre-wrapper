@@ -1,6 +1,6 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts;
+namespace Santosdave\SabreWrapper\Contracts;
 
 interface SabreResponse
 {

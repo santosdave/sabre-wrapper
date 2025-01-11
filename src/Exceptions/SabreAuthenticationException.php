@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Exceptions\Auth;
+namespace Santosdave\SabreWrapper\Exceptions\Auth;
 
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class SabreAuthenticationException extends SabreApiException
 {

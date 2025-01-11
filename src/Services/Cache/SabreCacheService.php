@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Cache;
+namespace Santosdave\SabreWrapper\Services\Cache;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class SabreCacheService
 {

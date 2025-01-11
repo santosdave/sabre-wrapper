@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Base;
+namespace Santosdave\SabreWrapper\Services\Base;
 
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Http\Soap\SoapClient;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Http\Soap\SoapClient;
 
 abstract class BaseSoapService
 {

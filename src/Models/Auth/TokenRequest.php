@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Auth;
+namespace Santosdave\SabreWrapper\Models\Auth;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class TokenRequest implements SabreRequest
 {

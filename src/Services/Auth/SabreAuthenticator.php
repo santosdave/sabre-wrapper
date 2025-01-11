@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Auth;
+namespace Santosdave\SabreWrapper\Services\Auth;
 
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Exceptions\Auth\SabreAuthenticationException;
-use Santosdave\Sabre\Models\Auth\TokenRequest;
-use Santosdave\Sabre\Models\Auth\TokenResponse;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
+use Santosdave\SabreWrapper\Models\Auth\TokenRequest;
+use Santosdave\SabreWrapper\Models\Auth\TokenResponse;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 

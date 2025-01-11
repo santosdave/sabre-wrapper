@@ -1,10 +1,10 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Core;
+namespace Santosdave\SabreWrapper\Services\Core;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\SabreRateLimitException;
+use Santosdave\SabreWrapper\Exceptions\SabreRateLimitException;
 
 class RateLimitService
 {

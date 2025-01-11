@@ -1,16 +1,16 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\ExchangeServiceInterface;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeSearchRequest;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeSearchResponse;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeBookRequest;
-use Santosdave\Sabre\Models\Air\Exchange\ExchangeBookResponse;
-use Santosdave\Sabre\Models\Air\Exchange\RefundQuoteRequest;
-use Santosdave\Sabre\Models\Air\Exchange\RefundQuoteResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\ExchangeServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeSearchRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeSearchResponse;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeBookRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\ExchangeBookResponse;
+use Santosdave\SabreWrapper\Models\Air\Exchange\RefundQuoteRequest;
+use Santosdave\SabreWrapper\Models\Air\Exchange\RefundQuoteResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class ExchangeService extends BaseRestService implements ExchangeServiceInterface
 {

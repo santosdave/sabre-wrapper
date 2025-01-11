@@ -1,8 +1,8 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Order;
+namespace Santosdave\SabreWrapper\Models\Air\Order;
 
-use Santosdave\Sabre\Contracts\SabreResponse;
+use Santosdave\SabreWrapper\Contracts\SabreResponse;
 
 class OrderViewResponse implements SabreResponse
 {

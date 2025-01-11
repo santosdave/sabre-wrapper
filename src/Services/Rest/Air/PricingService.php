@@ -1,16 +1,16 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\AirPricingServiceInterface;
-use Santosdave\Sabre\Models\Air\Pricing\PriceItineraryRequest;
-use Santosdave\Sabre\Models\Air\Pricing\PriceItineraryResponse;
-use Santosdave\Sabre\Models\Air\Pricing\ValidatePriceRequest;
-use Santosdave\Sabre\Models\Air\Pricing\ValidatePriceResponse;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Models\Air\OfferPriceRequest;
-use Santosdave\Sabre\Models\Air\OfferPriceResponse;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\AirPricingServiceInterface;
+use Santosdave\SabreWrapper\Models\Air\Pricing\PriceItineraryRequest;
+use Santosdave\SabreWrapper\Models\Air\Pricing\PriceItineraryResponse;
+use Santosdave\SabreWrapper\Models\Air\Pricing\ValidatePriceRequest;
+use Santosdave\SabreWrapper\Models\Air\Pricing\ValidatePriceResponse;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Models\Air\OfferPriceRequest;
+use Santosdave\SabreWrapper\Models\Air\OfferPriceResponse;
 
 class PricingService extends BaseRestService implements AirPricingServiceInterface
 {

@@ -1,12 +1,12 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Rest\Air;
+namespace Santosdave\SabreWrapper\Services\Rest\Air;
 
-use Santosdave\Sabre\Services\Base\BaseRestService;
-use Santosdave\Sabre\Contracts\Services\AirIntelligenceServiceInterface;
-use Santosdave\Sabre\Models\Intelligence\SeasonalityRequest;
-use Santosdave\Sabre\Models\Intelligence\LowFareHistoryRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Base\BaseRestService;
+use Santosdave\SabreWrapper\Contracts\Services\AirIntelligenceServiceInterface;
+use Santosdave\SabreWrapper\Models\Intelligence\SeasonalityRequest;
+use Santosdave\SabreWrapper\Models\Intelligence\LowFareHistoryRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class IntelligenceService extends BaseRestService implements AirIntelligenceServiceInterface
 {

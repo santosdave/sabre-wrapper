@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Http\Rest;
+namespace Santosdave\SabreWrapper\Http\Rest;
 
 use GuzzleHttp\Client;
-use Santosdave\Sabre\Contracts\SabreAuthenticatable;
-use Santosdave\Sabre\Exceptions\SabreApiException;
-use Santosdave\Sabre\Services\Core\RetryService;
+use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Services\Core\RetryService;
 
 class RestClient
 {

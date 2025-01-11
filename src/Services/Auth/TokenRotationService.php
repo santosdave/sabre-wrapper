@@ -1,12 +1,12 @@
 <?php
 
-namespace Santosdave\Sabre\Services\Auth;
+namespace Santosdave\SabreWrapper\Services\Auth;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Santosdave\Sabre\Exceptions\Auth\SabreAuthenticationException;
-use Santosdave\Sabre\Models\Auth\TokenRequest;
-use Santosdave\Sabre\Models\Auth\TokenResponse;
+use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
+use Santosdave\SabreWrapper\Models\Auth\TokenRequest;
+use Santosdave\SabreWrapper\Models\Auth\TokenResponse;
 
 class TokenRotationService
 {

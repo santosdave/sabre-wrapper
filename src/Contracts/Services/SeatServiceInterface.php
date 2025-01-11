@@ -1,11 +1,11 @@
 <?php
 
-namespace Santosdave\Sabre\Contracts\Services;
+namespace Santosdave\SabreWrapper\Contracts\Services;
 
-use Santosdave\Sabre\Models\Air\Seat\SeatMapRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatMapResponse;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignRequest;
-use Santosdave\Sabre\Models\Air\Seat\SeatAssignResponse;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatMapResponse;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignRequest;
+use Santosdave\SabreWrapper\Models\Air\Seat\SeatAssignResponse;
 
 interface SeatServiceInterface
 {

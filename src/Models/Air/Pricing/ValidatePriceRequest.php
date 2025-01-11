@@ -1,9 +1,9 @@
 <?php
 
-namespace Santosdave\Sabre\Models\Air\Pricing;
+namespace Santosdave\SabreWrapper\Models\Air\Pricing;
 
-use Santosdave\Sabre\Contracts\SabreRequest;
-use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\SabreWrapper\Contracts\SabreRequest;
+use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class ValidatePriceRequest implements SabreRequest
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Santosdave\Sabre\Http\Soap;
+namespace Santosdave\SabreWrapper\Http\Soap;
 
 use InvalidArgumentException;
 use DateTimeInterface;
