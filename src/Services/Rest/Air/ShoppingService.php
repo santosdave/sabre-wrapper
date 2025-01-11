@@ -7,44 +7,74 @@ use Santosdave\Sabre\Contracts\Services\AirShoppingServiceInterface;
 use Santosdave\Sabre\Models\Air\BargainFinderMaxRequest;
 use Santosdave\Sabre\Models\Air\BargainFinderMaxResponse;
 use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\Sabre\Helpers\CacheableRequest;
 
 class ShoppingService extends BaseRestService implements AirShoppingServiceInterface
 {
+
+    use CacheableRequest;
+
     public function bargainFinderMax(BargainFinderMaxRequest $request): BargainFinderMaxResponse
     {
-        try {
-            $response = $this->client->post('/v2/offers/shop', $request->toArray());
-            return new BargainFinderMaxResponse($response);
-        } catch (\Exception $e) {
-            throw new SabreApiException(
-                "REST: Failed to execute Bargain Finder Max search: " . $e->getMessage(),
-                $e->getCode()
-            );
-        }
+        $cacheKey = $this->generateCacheKey([
+            'method' => 'bargainFinderMax',
+            'params' => $request->toArray()
+        ]);
+
+        return $this->withCache(
+            $cacheKey,
+            function () use ($request) {
+                try {
+                    $response = $this->client->post(
+                        '/v3/offers/shop',
+                        $request->toArray()
+                    );
+                    return new BargainFinderMaxResponse($response);
+                } catch (\Exception $e) {
+                    throw new SabreApiException(
+                        "Failed to execute Bargain Finder Max search: " . $e->getMessage(),
+                        $e->getCode()
+                    );
+                }
+            },
+            'shopping.results'
+        );
     }
 
     public function alternativeDatesSearch(BargainFinderMaxRequest $request): BargainFinderMaxResponse
     {
-        try {
-            $response = $this->client->post(
-                '/v6.1.0/shop/altdates/flights?mode=live',
-                array_merge($request->toArray(), [
-                    'TPA_Extensions' => [
-                        'IntelliSellTransaction' => [
-                            'RequestType' => [
-                                'Name' => 'AD3'
+        $cacheKey = $this->generateCacheKey([
+            'method' => 'alternativeDatesSearch',
+            'params' => $request->toArray()
+        ]);
+
+        return $this->withCache(
+            $cacheKey,
+            function () use ($request) {
+                try {
+                    $response = $this->client->post(
+                        '/v3/offers/shop',
+                        array_merge($request->toArray(), [
+                            'TPA_Extensions' => [
+                                'IntelliSellTransaction' => [
+                                    'RequestType' => [
+                                        'Name' => 'AD3'
+                                    ]
+                                ]
                             ]
-                        ]
-                    ]
-                ])
-            );
-            return new BargainFinderMaxResponse($response);
-        } catch (\Exception $e) {
-            throw new SabreApiException(
-                "REST: Failed to execute alternative dates search: " . $e->getMessage(),
-                $e->getCode()
-            );
-        }
+                        ])
+                    );
+                    return new BargainFinderMaxResponse($response);
+                } catch (\Exception $e) {
+                    throw new SabreApiException(
+                        "Failed to execute alternative dates search: " . $e->getMessage(),
+                        $e->getCode()
+                    );
+                }
+            },
+            'shopping.alternative_dates',
+            1800 // 30 minutes cache
+        );
     }
 
     public function instaFlights(
@@ -54,27 +84,43 @@ class ShoppingService extends BaseRestService implements AirShoppingServiceInter
         ?string $returnDate = null,
         int $limit = 50
     ): array {
-        try {
-            $params = [
-                'origin' => $origin,
-                'destination' => $destination,
-                'departuredate' => $departureDate,
-                'limit' => $limit,
-                'sortby' => 'totalfare',
-                'order' => 'asc',
-                'pointofsalecountry' => 'US'
-            ];
+        $cacheKey = $this->generateCacheKey([
+            'method' => 'instaFlights',
+            'origin' => $origin,
+            'destination' => $destination,
+            'departureDate' => $departureDate,
+            'returnDate' => $returnDate,
+            'limit' => $limit
+        ]);
 
-            if ($returnDate) {
-                $params['returndate'] = $returnDate;
-            }
+        return $this->withCache(
+            $cacheKey,
+            function () use ($origin, $destination, $departureDate, $returnDate, $limit) {
+                try {
+                    $params = [
+                        'origin' => $origin,
+                        'destination' => $destination,
+                        'departuredate' => $departureDate,
+                        'limit' => $limit,
+                        'sortby' => 'totalfare',
+                        'order' => 'asc',
+                        'pointofsalecountry' => 'US'
+                    ];
 
-            return $this->client->get('/v1/shop/flights', $params);
-        } catch (\Exception $e) {
-            throw new SabreApiException(
-                "REST: Failed to execute InstaFlights search: " . $e->getMessage(),
-                $e->getCode()
-            );
-        }
+                    if ($returnDate) {
+                        $params['returndate'] = $returnDate;
+                    }
+
+                    return $this->client->get('/v1/shop/flights', $params);
+                } catch (\Exception $e) {
+                    throw new SabreApiException(
+                        "Failed to execute InstaFlights search: " . $e->getMessage(),
+                        $e->getCode()
+                    );
+                }
+            },
+            'shopping.insta_flights',
+            900 // 15 minutes cache
+        );
     }
 }

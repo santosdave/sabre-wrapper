@@ -5,11 +5,14 @@ namespace Santosdave\Sabre\Http\Rest;
 use GuzzleHttp\Client;
 use Santosdave\Sabre\Contracts\SabreAuthenticatable;
 use Santosdave\Sabre\Exceptions\SabreApiException;
+use Santosdave\Sabre\Services\Core\RetryService;
 
 class RestClient
 {
     private Client $client;
     private array $defaultHeaders;
+
+    private RetryService $retryService;
 
     public function __construct(
         private SabreAuthenticatable $auth,
@@ -17,13 +20,15 @@ class RestClient
     ) {
         $this->setupClient();
         $this->setupDefaultHeaders();
+        $this->retryService = new RetryService();
     }
 
     private function setupClient(): void
     {
         $this->client = new Client([
             'base_uri' => config("sabre.endpoints.{$this->environment}.rest"),
-            'http_errors' => false
+            'http_errors' => false,
+            'timeout' => config('sabre.request.timeout', 30)
         ]);
     }
 
@@ -47,7 +52,7 @@ class RestClient
 
     private function request(string $method, string $endpoint, array $options = []): array
     {
-        try {
+        return $this->retryService->execute(function () use ($method, $endpoint, $options) {
             $options['headers'] = array_merge(
                 $this->defaultHeaders,
                 ['Authorization' => $this->auth->getAuthorizationHeader()],
@@ -61,20 +66,22 @@ class RestClient
             if ($statusCode >= 400) {
                 throw new SabreApiException(
                     "Sabre API error: " . $body,
-                    $statusCode
+                    $statusCode,
+                    json_decode($body, true),
+                    $response->getHeaderLine('X-Request-Id')
                 );
             }
 
             return json_decode($body, true) ?? [];
-        } catch (\Exception $e) {
-            if ($e instanceof SabreApiException) {
-                throw $e;
-            }
+        }, [
+            'method' => $method,
+            'endpoint' => $endpoint,
+            'environment' => $this->environment
+        ]);
+    }
 
-            throw new SabreApiException(
-                "Failed to make request to Sabre API: " . $e->getMessage(),
-                $e->getCode()
-            );
-        }
+    public function setRetryConfig(array $config): void
+    {
+        $this->retryService->setConfig($config);
     }
 }

@@ -14,6 +14,8 @@ use Santosdave\Sabre\Models\Air\Order\OrderExchangeRequest;
 use Santosdave\Sabre\Models\Air\Order\OrderExchangeResponse;
 use Santosdave\Sabre\Models\Air\Order\OrderFulfillRequest;
 use Santosdave\Sabre\Models\Air\Order\OrderFulfillResponse;
+use Santosdave\Sabre\Models\Air\Order\OrderSplitRequest;
+use Santosdave\Sabre\Models\Air\Order\OrderSplitResponse;
 
 interface OrderManagementServiceInterface
 {
@@ -34,6 +36,26 @@ interface OrderManagementServiceInterface
     public function fulfillOrder(OrderFulfillRequest $request): OrderFulfillResponse;
 
     public function getOrderFulfillmentStatus(string $orderId): OrderFulfillResponse;
+
+    /**
+     * Split an existing order into multiple orders
+     */
+    public function splitOrder(OrderSplitRequest $request): OrderSplitResponse;
+
+    /**
+     * Validate if an order can be split with given configuration
+     */
+    public function validateSplit(string $orderId, array $splitConfig): bool;
+
+    /**
+     * Get available split options for an order
+     */
+    public function getSplitOptions(string $orderId): array;
+
+    /**
+     * Merge previously split orders back together
+     */
+    public function mergeSplitOrders(array $orderIds): OrderViewResponse;
 
 
     // Exchange methods

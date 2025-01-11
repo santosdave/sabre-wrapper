@@ -15,6 +15,8 @@ class SabreAuthenticator implements SabreAuthenticatable
     private SessionPool $sessionPool;
     private TokenRefreshManager $tokenManager;
 
+    private TokenRotationService $tokenRotationService;
+
     private array $cacheKeys = [];
 
     public function __construct(
@@ -30,6 +32,10 @@ class SabreAuthenticator implements SabreAuthenticatable
 
         $this->sessionPool = new SessionPool($this);
         $this->tokenManager = new TokenRefreshManager($this);
+        $this->tokenRotationService = new TokenRotationService(
+            $this->tokenManager,
+            $this
+        );
     }
 
     private function setupClient(): void
@@ -59,8 +65,11 @@ class SabreAuthenticator implements SabreAuthenticatable
         }
 
         if ($token = Cache::get($this->cacheKeys[$type])) {
-            // Check if token needs refresh
-            return $this->tokenManager->refreshTokenIfNeeded($type, $token);
+            // Check if token needs refresh or rotation
+            if ($this->tokenManager->shouldRefreshToken($type, $token)) {
+                return $this->tokenRotationService->rotateToken($type);
+            }
+            return $token;
         }
 
         $this->refreshToken($type);
@@ -79,6 +88,11 @@ class SabreAuthenticator implements SabreAuthenticatable
                 $type
             );
         }
+    }
+
+    public function validateToken(string $token, string $type = 'rest'): bool
+    {
+        return $this->tokenRotationService->validateToken($token, $type);
     }
 
 

@@ -17,6 +17,8 @@ use Santosdave\Sabre\Models\Air\Order\OrderExchangeRequest;
 use Santosdave\Sabre\Models\Air\Order\OrderExchangeResponse;
 use Santosdave\Sabre\Models\Air\Order\OrderFulfillRequest;
 use Santosdave\Sabre\Models\Air\Order\OrderFulfillResponse;
+use Santosdave\Sabre\Models\Air\Order\OrderSplitRequest;
+use Santosdave\Sabre\Models\Air\Order\OrderSplitResponse;
 
 class OrderManagementService extends BaseRestService implements OrderManagementServiceInterface
 {
@@ -237,6 +239,64 @@ class OrderManagementService extends BaseRestService implements OrderManagementS
         } catch (\Exception $e) {
             throw new SabreApiException(
                 "Failed to confirm exchange: " . $e->getMessage(),
+                $e->getCode()
+            );
+        }
+    }
+
+    public function splitOrder(OrderSplitRequest $request): OrderSplitResponse
+    {
+        try {
+            $response = $this->client->post(
+                '/v1/orders/split',
+                $request->toArray()
+            );
+            return new OrderSplitResponse($response);
+        } catch (\Exception $e) {
+            throw new SabreApiException(
+                "Failed to split order: " . $e->getMessage(),
+                $e->getCode()
+            );
+        }
+    }
+
+    public function validateSplit(string $orderId, array $splitConfig): bool
+    {
+        try {
+            $response = $this->client->post("/v1/orders/{$orderId}/split/validate", [
+                'splitConfig' => $splitConfig
+            ]);
+            return $response['valid'] ?? false;
+        } catch (\Exception $e) {
+            throw new SabreApiException(
+                "Failed to validate order split: " . $e->getMessage(),
+                $e->getCode()
+            );
+        }
+    }
+
+    public function getSplitOptions(string $orderId): array
+    {
+        try {
+            return $this->client->get("/v1/orders/{$orderId}/split/options");
+        } catch (\Exception $e) {
+            throw new SabreApiException(
+                "Failed to get split options: " . $e->getMessage(),
+                $e->getCode()
+            );
+        }
+    }
+
+    public function mergeSplitOrders(array $orderIds): OrderViewResponse
+    {
+        try {
+            $response = $this->client->post('/v1/orders/merge', [
+                'orderIds' => $orderIds
+            ]);
+            return new OrderViewResponse($response);
+        } catch (\Exception $e) {
+            throw new SabreApiException(
+                "Failed to merge orders: " . $e->getMessage(),
                 $e->getCode()
             );
         }
