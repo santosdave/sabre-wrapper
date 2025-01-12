@@ -271,10 +271,3 @@ $metrics = [
     'errors' => $this->getErrorMetrics()
 ];
 ```
-
-Would you like me to:
-
-1. Add more error handling scenarios?
-2. Include additional configuration examples?
-3. Add more authentication workflows?
-4. Cover any specific aspect in more detail?

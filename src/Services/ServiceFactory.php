@@ -2,7 +2,7 @@
 
 namespace Santosdave\SabreWrapper\Services;
 
-use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Contracts\Auth\TokenManagerInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirIntelligenceServiceInterface;
@@ -23,7 +23,7 @@ class ServiceFactory
     public const SOAP = 'soap';
 
     public function __construct(
-        private SabreAuthenticatable $auth,
+        private TokenManagerInterface $auth,
         private string $environment = 'cert'
     ) {}
     private const SERVICE_MAPPINGS = [

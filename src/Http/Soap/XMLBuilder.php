@@ -68,102 +68,108 @@ class XMLBuilder
         return $this;
     }
 
-    public function setPcc(string $pcc): self
+    public function buildTokenCreateRequest(array $credentials): string
+
     {
-        if (!preg_match('/^[A-Z0-9]{3,4}$/', $pcc)) {
-            throw new InvalidArgumentException('Invalid PCC format');
-        }
-        
-        $this->pcc = $pcc;
-        return $this;
-    }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function setVersion(string $version): self
-    {
-        if (!in_array($version, self::SUPPORTED_VERSIONS, true)) {
-            throw new InvalidArgumentException(
-                sprintf('Unsupported version: %s. Supported versions: %s',
-                    $version,
-                    implode(', ', self::SUPPORTED_VERSIONS)
-                )
-            );
-        }
-        
-        $this->version = $version;
-        return $this;
-    }
+        return <<<XML
 
-    public function setPayload(array $payload): self
-    {
-        $this->validatePayload($payload);
-        $this->payload = $payload;
-        return $this;
-    }
+        <?xml version="1.0" encoding="UTF-8"?>
 
-    /**
-     * Allows setting a custom timestamp for testing purposes
-     */
-    public function setTimestamp(DateTimeInterface $timestamp): self
-    {
-        $this->timestamp = $timestamp;
-        return $this;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function build(): string
-    {
-        $this->validateRequiredFields();
-
-        $header = $this->action === 'SessionCreateRQ'
-            ? $this->buildSessionCreateHeader()
-            : $this->buildHeader();
-
-        return $this->formatXml(<<<XML
-            <?xml version="1.0" encoding="UTF-8"?>
 <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    {$header}
+    xmlns:sec="http://schemas.xmlsoap.org/ws/2002/12/secext">
+
+    <soap-env:Header />
+
     <soap-env:Body>
-        {$this->buildBody()}
+
+        <TokenCreateRQ Version="1.0.0">
+
+            <Domain>DEFAULT</Domain>
+
+            <Organization>{$credentials['pcc']}</Organization>
+
+        </TokenCreateRQ>
+
     </soap-env:Body>
+
 </soap-env:Envelope>
-XML
+
+XML;
+
+}
+
+public function setPcc(string $pcc): self
+{
+if (!preg_match('/^[A-Z0-9]{3,4}$/', $pcc)) {
+throw new InvalidArgumentException('Invalid PCC format');
+}
+
+$this->pcc = $pcc;
+return $this;
+}
+
+/**
+* @throws InvalidArgumentException
+*/
+public function setVersion(string $version): self
+{
+if (!in_array($version, self::SUPPORTED_VERSIONS, true)) {
+throw new InvalidArgumentException(
+sprintf('Unsupported version: %s. Supported versions: %s',
+$version,
+implode(', ', self::SUPPORTED_VERSIONS)
+)
 );
 }
 
-private function buildHeader(): string
+$this->version = $version;
+return $this;
+}
+
+public function setPayload(array $payload): self
 {
-return
-<<<XML <soap-env:Header>
-    <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
-        <From>
-            <PartyId>Agency</PartyId>
-        </From>
-        <To>
-            <PartyId>Sabre_API</PartyId>
-        </To>
-        <ConversationId>{$this->generateConversationId()}</ConversationId>
-        <Action>{$this->action}</Action>
-        <MessageData>
-            <MessageId>{$this->generateMessageId()}</MessageId>
-            <Timestamp>{$this->getTimestamp()}</Timestamp>
-        </MessageData>
-    </MessageHeader>
-    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
-        <BinarySecurityToken>{$this->token}</BinarySecurityToken>
-    </Security>
-    </soap-env:Header>
-    XML;
+$this->validatePayload($payload);
+$this->payload = $payload;
+return $this;
+}
+
+/**
+* Allows setting a custom timestamp for testing purposes
+*/
+public function setTimestamp(DateTimeInterface $timestamp): self
+{
+$this->timestamp = $timestamp;
+return $this;
+}
+
+/**
+* @throws InvalidArgumentException
+*/
+public function build(): string
+{
+$this->validateRequiredFields();
+
+$header = $this->action === 'SessionCreateRQ'
+? $this->buildSessionCreateHeader()
+: $this->buildHeader();
+
+return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
+    <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        {$header}
+        <soap-env:Body>
+            {$this->buildBody()}
+        </soap-env:Body>
+    </soap-env:Envelope>
+    XML
+    );
     }
 
-    private function buildSessionCreateHeader(): string
+    private function buildHeader(): string
     {
-    return <<<XML <soap-env:Header>
+    return
+    <<<XML <soap-env:Header>
         <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
             <From>
                 <PartyId>Agency</PartyId>
@@ -172,44 +178,68 @@ return
                 <PartyId>Sabre_API</PartyId>
             </To>
             <ConversationId>{$this->generateConversationId()}</ConversationId>
-            <Action>SessionCreateRQ</Action>
+            <Action>{$this->action}</Action>
+            <MessageData>
+                <MessageId>{$this->generateMessageId()}</MessageId>
+                <Timestamp>{$this->getTimestamp()}</Timestamp>
+            </MessageData>
         </MessageHeader>
         <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
-            <UsernameToken>
-                <Username>{$this->payload['username']}</Username>
-                <Password>{$this->payload['password']}</Password>
-                <Organization>{$this->pcc}</Organization>
-                <Domain>{$this->getDomain()}</Domain>
-            </UsernameToken>
+            <BinarySecurityToken>{$this->token}</BinarySecurityToken>
         </Security>
         </soap-env:Header>
         XML;
         }
 
-        private function buildBody(): string
+        private function buildSessionCreateHeader(): string
         {
-        // Create a copy of payload to avoid modifying the original
-        $payload = $this->payload;
+        return <<<XML <soap-env:Header>
+            <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
+                <From>
+                    <PartyId>Agency</PartyId>
+                </From>
+                <To>
+                    <PartyId>Sabre_API</PartyId>
+                </To>
+                <ConversationId>{$this->generateConversationId()}</ConversationId>
+                <Action>SessionCreateRQ</Action>
+            </MessageHeader>
+            <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
+                <UsernameToken>
+                    <Username>{$this->payload['username']}</Username>
+                    <Password>{$this->payload['password']}</Password>
+                    <Organization>{$this->pcc}</Organization>
+                    <Domain>{$this->getDomain()}</Domain>
+                </UsernameToken>
+            </Security>
+            </soap-env:Header>
+            XML;
+            }
 
-        // Remove authentication related fields
-        unset(
-        $payload['username'],
-        $payload['password'],
-        $payload['organization'],
-        $payload['domain']
-        );
+            private function buildBody(): string
+            {
+            // Create a copy of payload to avoid modifying the original
+            $payload = $this->payload;
 
-        $actionNode = $this->action;
-        if (!empty($this->version)) {
-        $actionNode .= sprintf(' Version="%s"', $this->version);
-        }
+            // Remove authentication related fields
+            unset(
+            $payload['username'],
+            $payload['password'],
+            $payload['organization'],
+            $payload['domain']
+            );
 
-        $namespace = $this->getNamespaceForAction();
-        if ($namespace) {
-        $actionNode .= sprintf(' xmlns="%s"', $namespace);
-        }
+            $actionNode = $this->action;
+            if (!empty($this->version)) {
+            $actionNode .= sprintf(' Version="%s"', $this->version);
+            }
 
-        return sprintf('<%1$s>%2$s</%1$s>',
+            $namespace = $this->getNamespaceForAction();
+            if ($namespace) {
+            $actionNode .= sprintf(' xmlns="%s"', $namespace);
+            }
+
+            return sprintf('<%1$s>%2$s</%1$s>',
             $actionNode,
             $this->arrayToXmlString($payload)
         );

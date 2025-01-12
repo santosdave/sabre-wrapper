@@ -3,24 +3,24 @@
 namespace Santosdave\SabreWrapper\Http\Rest;
 
 use GuzzleHttp\Client;
-use Santosdave\SabreWrapper\Contracts\SabreAuthenticatable;
+use Santosdave\SabreWrapper\Contracts\Auth\TokenManagerInterface;
 use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 use Santosdave\SabreWrapper\Services\Core\RetryService;
+use Santosdave\SabreWrapper\Services\Logging\SabreLogger;
 
 class RestClient
 {
     private Client $client;
-    private array $defaultHeaders;
-
     private RetryService $retryService;
 
     public function __construct(
-        private SabreAuthenticatable $auth,
-        private string $environment = 'cert'
+        private TokenManagerInterface $auth,
+        private string $environment = 'cert',
+        private ?SabreLogger $logger = null
     ) {
         $this->setupClient();
-        $this->setupDefaultHeaders();
         $this->retryService = new RetryService();
+        $this->logger = $logger ?? app(SabreLogger::class);
     }
 
     private function setupClient(): void
@@ -30,14 +30,6 @@ class RestClient
             'http_errors' => false,
             'timeout' => config('sabre.request.timeout', 30)
         ]);
-    }
-
-    private function setupDefaultHeaders(): void
-    {
-        $this->defaultHeaders = [
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ];
     }
 
     public function get(string $endpoint, array $query = []): array
@@ -50,34 +42,114 @@ class RestClient
         return $this->request('POST', $endpoint, ['json' => $data]);
     }
 
-    private function request(string $method, string $endpoint, array $options = []): array
+    public function request(string $method, string $endpoint, array $options = []): array
     {
-        return $this->retryService->execute(function () use ($method, $endpoint, $options) {
-            $options['headers'] = array_merge(
-                $this->defaultHeaders,
-                ['Authorization' => $this->auth->getAuthorizationHeader()],
-                $options['headers'] ?? []
-            );
+        $startTime = microtime(true);
+        $requestId = uniqid('req_');
 
-            $response = $this->client->request($method, $endpoint, $options);
-            $body = $response->getBody()->getContents();
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode >= 400) {
-                throw new SabreApiException(
-                    "Sabre API error: " . $body,
-                    $statusCode,
-                    json_decode($body, true),
-                    $response->getHeaderLine('X-Request-Id')
+        return $this->retryService->execute(function () use ($method, $endpoint, $options, $startTime, $requestId) {
+            try {
+                // Add headers including authorization
+                $options['headers'] = array_merge(
+                    $this->getDefaultHeaders(),
+                    $options['headers'] ?? [],
+                    ['X-Request-ID' => $requestId]
                 );
-            }
 
-            return json_decode($body, true) ?? [];
-        }, [
-            'method' => $method,
-            'endpoint' => $endpoint,
-            'environment' => $this->environment
-        ]);
+                // Log request
+                $this->logger->logRequest(
+                    'REST',
+                    $endpoint,
+                    [
+                        'method' => $method,
+                        'endpoint' => $endpoint,
+                        'headers' => $this->sanitizeHeaders($options['headers']),
+                        'body' => $options['json'] ?? null,
+                        'request_id' => $requestId
+                    ]
+                );
+
+                // Make request
+                $response = $this->client->request($method, $endpoint, $options);
+                $body = $response->getBody()->getContents();
+                $duration = microtime(true) - $startTime;
+
+                // Parse response
+                $parsedResponse = json_decode($body, true) ?? [];
+
+                // Log response
+                $this->logger->logResponse(
+                    'REST',
+                    $endpoint,
+                    [
+                        'status' => $response->getStatusCode(),
+                        'headers' => $response->getHeaders(),
+                        'body' => $parsedResponse,
+                        'duration_ms' => round($duration * 1000, 2),
+                        'request_id' => $requestId
+                    ],
+                    $duration
+                );
+
+                // Handle error responses
+                if ($response->getStatusCode() >= 400) {
+                    throw new SabreApiException(
+                        "Sabre API error: {$body}",
+                        $response->getStatusCode(),
+                        $parsedResponse,
+                        $requestId
+                    );
+                }
+
+                return $parsedResponse;
+            } catch (\Exception $e) {
+                $this->logger->logError($e, [
+                    'request_id' => $requestId,
+                    'method' => $method,
+                    'endpoint' => $endpoint,
+                    'options' => $this->sanitizeOptions($options)
+                ]);
+                throw $e;
+            }
+        });
+    }
+
+    private function getDefaultHeaders(): array
+    {
+        return [
+            'Authorization' => $this->auth->getAuthorizationHeader('rest'),
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ];
+    }
+
+    private function sanitizeHeaders(array $headers): array
+    {
+        $sensitiveHeaders = ['Authorization', 'apikey', 'api-key'];
+
+        return array_map(function ($value, $key) use ($sensitiveHeaders) {
+            if (in_array($key, $sensitiveHeaders, true)) {
+                return '********';
+            }
+            return $value;
+        }, $headers, array_keys($headers));
+    }
+
+    private function sanitizeOptions(array $options): array
+    {
+        $sanitized = $options;
+
+        // Remove sensitive data from headers
+        if (isset($sanitized['headers'])) {
+            $sanitized['headers'] = $this->sanitizeHeaders($sanitized['headers']);
+        }
+
+        // Remove potentially sensitive body content
+        if (isset($sanitized['json'])) {
+            $sanitized['json'] = '[REDACTED]';
+        }
+
+        return $sanitized;
     }
 
     public function setRetryConfig(array $config): void
