@@ -29,7 +29,7 @@ class BargainFinderMaxRequest implements SabreRequest
         ?string $returnDate = null
     ): self {
         $segment = [
-            'RPH' => count($this->originDestinationInformation) + 1,
+            'RPH' => (string)(count($this->originDestinationInformation) + 1),
             'DepartureDateTime' => $departureDate . 'T00:00:00',
             'OriginLocation' => [
                 'LocationCode' => $origin
@@ -43,7 +43,7 @@ class BargainFinderMaxRequest implements SabreRequest
 
         if ($returnDate) {
             $returnSegment = [
-                'RPH' => count($this->originDestinationInformation) + 1,
+                'RPH' => (string)(count($this->originDestinationInformation) + 1),
                 'DepartureDateTime' => $returnDate . 'T00:00:00',
                 'OriginLocation' => [
                     'LocationCode' => $destination

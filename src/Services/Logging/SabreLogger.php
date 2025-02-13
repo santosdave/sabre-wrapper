@@ -56,24 +56,24 @@ class SabreLogger implements LoggerInterface
             $this->logger->pushHandler($authHandler);
         }
 
-        if ($this->config['separate_files']['requests']) {
-            $requestHandler = new RotatingFileHandler(
-                storage_path('logs/sabre_requests.log'),
-                $this->config['days']
-            );
-            $requestHandler->setFormatter(new JsonFormatter());
-            $this->logger->pushHandler($requestHandler);
-        }
+        // if ($this->config['separate_files']['requests']) {
+        //     $requestHandler = new RotatingFileHandler(
+        //         storage_path('logs/sabre_requests.log'),
+        //         $this->config['days']
+        //     );
+        //     $requestHandler->setFormatter(new JsonFormatter());
+        //     $this->logger->pushHandler($requestHandler);
+        // }
 
-        if ($this->config['separate_files']['errors']) {
-            $errorHandler = new RotatingFileHandler(
-                storage_path('logs/sabre_errors.log'),
-                $this->config['days'],
-                Logger::ERROR
-            );
-            $errorHandler->setFormatter(new JsonFormatter());
-            $this->logger->pushHandler($errorHandler);
-        }
+        // if ($this->config['separate_files']['errors']) {
+        //     $errorHandler = new RotatingFileHandler(
+        //         storage_path('logs/sabre_errors.log'),
+        //         $this->config['days'],
+        //         Logger::ERROR
+        //     );
+        //     $errorHandler->setFormatter(new JsonFormatter());
+        //     $this->logger->pushHandler($errorHandler);
+        // }
     }
 
     public function logRequest(string $service, string $action, array $request, array $context = []): void

@@ -56,16 +56,30 @@ class CacheShoppingService extends BaseRestService implements CacheShoppingServi
             return [];
         }
 
-        return array_map(function ($itinerary) {
+        $itineraries = array_map(function ($itinerary) {
             return [
+                'sequence_number' => $itinerary['SequenceNumber'] ?? null,
+                'itinerary_type' => $itinerary['AirItinerary']['DirectionInd'] ?? null,
                 'total_fare' => [
                     'amount' => $itinerary['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['Amount'],
                     'currency' => $itinerary['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['CurrencyCode']
                 ],
+                'fare_info' => $itinerary['AirItineraryPricingInfo'] ?? null,
                 'segments' => $this->extractSegments($itinerary['AirItinerary']['OriginDestinationOptions']),
-                'validating_carrier' => $itinerary['AirItineraryPricingInfo']['ValidatingCarrierCode'] ?? null
+                'validating_carrier' => $itinerary['TPA_Extensions']['ValidatingCarrier']['Code'] ?? null,
+                'ticketing_info' => $itinerary['TicketingInfo'] ?? null,
+                'last_ticketing_date' => $itinerary['AirItineraryPricingInfo']['LastTicketDate'] ?? null,
             ];
         }, $response['PricedItineraries']);
+
+        return [
+            'origin' => $response['OriginLocation'] ?? null,
+            'destination' => $response['DestinationLocation'] ?? null,
+            'departure_date' => $response['DepartureDateTime'] ?? null,
+            'arrival_date' => $response['ReturnDateTime'] ?? null,
+            'links' => $response['Links'] ?? null,
+            'itineraries' => $itineraries
+        ];
     }
 
     private function normalizeDestinationFinderResponse(array $response): array
@@ -74,18 +88,32 @@ class CacheShoppingService extends BaseRestService implements CacheShoppingServi
             return [];
         }
 
-        return array_map(function ($fare) {
+        $destinations = array_map(function ($fare) {
             return [
                 'destination' => $fare['DestinationLocation'],
                 'lowest_fare' => [
-                    'amount' => $fare['LowestFare']['Fare'],
-                    'currency' => $fare['CurrencyCode']
+                    'amount' => $fare['LowestFare']['Fare'] ?? null,
+                    'currency' => $fare['CurrencyCode'] ?? null,
+                    'airlines' => $fare['LowestFare']['AirlineCodes'] ?? []
                 ],
-                'departure_dates' => $fare['DepartureDates'] ?? [],
-                'return_dates' => $fare['ReturnDates'] ?? [],
+                'lowest_nonstop_fare' => [
+                    'amount' => $fare['LowestNonStopFare']['Fare'] ?? null,
+                    'currency' => $fare['CurrencyCode'] ?? null,
+                    'airlines' => $fare['LowestNonStopFare']['AirlineCodes'] ?? []
+                ],
+                'distance' => $fare['Distance'] ?? null,
+                'price_per_mile' => $fare['PricePerMile'] ?? null,
+                'departure_dates' => $fare['DepartureDateTime'] ?? [],
+                'return_dates' => $fare['ReturnDateTime'] ?? [],
                 'links' => $fare['Links'] ?? []
             ];
         }, $response['FareInfo']);
+
+        return [
+            'origin' => $response['OriginLocation'] ?? null,
+            'links' => $response['Links'] ?? null,
+            'destinations' => $destinations
+        ];
     }
 
     private function normalizeLeadPriceResponse(array $response): array
@@ -94,17 +122,30 @@ class CacheShoppingService extends BaseRestService implements CacheShoppingServi
             return [];
         }
 
-        return array_map(function ($fare) {
+        $calendars = array_map(function ($fare) {
             return [
                 'departure_date' => $fare['DepartureDateTime'],
                 'return_date' => $fare['ReturnDateTime'] ?? null,
-                'fare' => [
-                    'amount' => $fare['LowestFare']['Fare'],
-                    'currency' => $fare['CurrencyCode']
+                'lowest_fare' => [
+                    'amount' => $fare['LowestFare']['Fare'] ?? null,
+                    'currency' => $fare['CurrencyCode'] ?? null,
+                    'airlines' => $fare['LowestFare']['AirlineCodes'] ?? []
+                ],
+                'lowest_nonstop_fare' => [
+                    'amount' => $fare['LowestNonStopFare']['Fare'] ?? null,
+                    'currency' => $fare['CurrencyCode'] ?? null,
+                    'airlines' => $fare['LowestNonStopFare']['AirlineCodes'] ?? []
                 ],
                 'links' => $fare['Links'] ?? []
             ];
         }, $response['FareInfo']);
+
+        return [
+            'origin' => $response['OriginLocation'] ?? null,
+            'destination' => $response['DestinationLocation'] ?? null,
+            'links' => $response['Links'] ?? null,
+            'calendars' => $calendars
+        ];
     }
 
     private function extractSegments(array $options): array
@@ -120,17 +161,26 @@ class CacheShoppingService extends BaseRestService implements CacheShoppingServi
                 $segments[] = [
                     'departure' => [
                         'airport' => $segment['DepartureAirport']['LocationCode'],
-                        'time' => $segment['DepartureDateTime']
+                        'time' => $segment['DepartureDateTime'],
+                        'timezone' => $segment['DepartureTimeZone']['GMTOffset'] ?? null,
                     ],
                     'arrival' => [
                         'airport' => $segment['ArrivalAirport']['LocationCode'],
-                        'time' => $segment['ArrivalDateTime']
+                        'time' => $segment['ArrivalDateTime'],
+                        'timezone' => $segment['ArrivalTimeZone']['GMTOffset'] ?? null,
                     ],
-                    'flight_number' => $segment['FlightNumber'],
-                    'marketing_carrier' => $segment['MarketingAirline']['Code'],
-                    'operating_carrier' => $segment['OperatingAirline']['Code'] ?? null,
+                    'flight_details' => [
+                        'flight_number' => $segment['FlightNumber'] ?? null,
+                        'marketing_carrier' => $segment['MarketingAirline']['Code'] ?? null,
+                        'operating_carrier' => $segment['OperatingAirline']['Code'] ?? null,
+                        'equipment' => $segment['Equipment']['AirEquipType'] ?? null,
+                        'res_book_designator_code' => $segment['ResBookDesigCode'],
+                    ],
                     'duration' => $segment['ElapsedTime'] ?? null,
-                    'cabin' => $segment['ResBookDesigCode']
+                    'tpa_extensions' => $segment['TPA_Extensions'] ?? null,
+                    'stop_quantity' => $segment['StopQuantity'] ?? null,
+                    'elapsed_time' =>  $segment['ElapsedTime'] ?? null,
+                    'marriage_group' => $segment['MarriageGrp'] ?? null,
                 ];
             }
         }

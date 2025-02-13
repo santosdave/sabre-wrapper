@@ -46,40 +46,19 @@ class IntelligenceService extends BaseRestService implements AirIntelligenceServ
 
     private function normalizeSeasonalityResponse(array $response): array
     {
-        if (!isset($response['SeasonalityResponse'])) {
+        if (!isset($response)) {
             return [];
         }
 
-        return array_map(function ($month) {
-            return [
-                'month' => $month['Month'],
-                'score' => $month['Score'],
-                'demand' => $month['Demand'] ?? null,
-                'price' => $month['Price'] ?? null,
-                'temperature' => $month['Temperature'] ?? null,
-                'precipitation' => $month['Precipitation'] ?? null
-            ];
-        }, $response['SeasonalityResponse']['Month'] ?? []);
+        return $response;
     }
 
     private function normalizeFareHistoryResponse(array $response): array
     {
-        if (!isset($response['FareHistoryResponse'])) {
+        if (!isset($response)) {
             return [];
         }
 
-        return [
-            'lowest_fare' => $response['FareHistoryResponse']['LowestFare'] ?? null,
-            'highest_fare' => $response['FareHistoryResponse']['HighestFare'] ?? null,
-            'average_fare' => $response['FareHistoryResponse']['AverageFare'] ?? null,
-            'current_fare' => $response['FareHistoryResponse']['CurrentFare'] ?? null,
-            'fare_trends' => array_map(function ($trend) {
-                return [
-                    'date' => $trend['Date'],
-                    'fare' => $trend['Fare'],
-                    'trend' => $trend['Trend'] ?? null
-                ];
-            }, $response['FareHistoryResponse']['FareTrend'] ?? [])
-        ];
+        return $response;
     }
 }

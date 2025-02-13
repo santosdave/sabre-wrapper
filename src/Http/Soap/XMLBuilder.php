@@ -23,7 +23,7 @@ class XMLBuilder
         'session' => 'http://www.opentravel.org/OTA/2002/11',
         'token' => 'http://webservices.sabre.com'
     ];
-    
+
     /** @var array<string, string> */
     private array $namespaces = [
         'SessionCreateRQ' => 'http://www.opentravel.org/OTA/2002/11',
@@ -47,13 +47,14 @@ class XMLBuilder
     {
         if (!array_key_exists($action, $this->namespaces)) {
             throw new InvalidArgumentException(
-                sprintf('Unsupported action: %s. Supported actions: %s', 
-                    $action, 
+                sprintf(
+                    'Unsupported action: %s. Supported actions: %s',
+                    $action,
                     implode(', ', array_keys($this->namespaces))
                 )
             );
         }
-        
+
         $this->action = $action;
         return $this;
     }
@@ -63,183 +64,106 @@ class XMLBuilder
         if (empty(trim($token))) {
             throw new InvalidArgumentException('Token cannot be empty');
         }
-        
+
         $this->token = $token;
         return $this;
     }
 
-    public function buildTokenCreateRequest(array $credentials): string
 
+    public function setPcc(string $pcc): self
     {
+        if (!preg_match('/^[A-Z0-9]{3,4}$/', $pcc)) {
+            throw new InvalidArgumentException('Invalid PCC format');
+        }
 
-        return <<<XML
+        $this->pcc = $pcc;
+        return $this;
+    }
 
-        <?xml version="1.0" encoding="UTF-8"?>
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function setVersion(string $version): self
+    {
+        if (!in_array($version, self::SUPPORTED_VERSIONS, true)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Unsupported version: %s. Supported versions: %s',
+                    $version,
+                    implode(', ', self::SUPPORTED_VERSIONS)
+                )
+            );
+        }
 
-<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:sec="http://schemas.xmlsoap.org/ws/2002/12/secext">
+        $this->version = $version;
+        return $this;
+    }
 
-    <soap-env:Header />
+    public function setPayload(array $payload): self
+    {
+        $this->validatePayload($payload);
+        $this->payload = $payload;
+        return $this;
+    }
 
-    <soap-env:Body>
+    /**
+     * Allows setting a custom timestamp for testing purposes
+     */
+    public function setTimestamp(DateTimeInterface $timestamp): self
+    {
+        $this->timestamp = $timestamp;
+        return $this;
+    }
 
-        <TokenCreateRQ Version="1.0.0">
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function build(): string
+    {
+        $this->validateRequiredFields();
 
-            <Domain>DEFAULT</Domain>
+        $header = $this->action === 'SessionCreateRQ'
+            ? $this->buildSessionCreateHeader()
+            : $this->buildHeader();
 
-            <Organization>{$credentials['pcc']}</Organization>
-
-        </TokenCreateRQ>
-
-    </soap-env:Body>
-
-</soap-env:Envelope>
-
-XML;
-
-}
-
-public function setPcc(string $pcc): self
-{
-if (!preg_match('/^[A-Z0-9]{3,4}$/', $pcc)) {
-throw new InvalidArgumentException('Invalid PCC format');
-}
-
-$this->pcc = $pcc;
-return $this;
-}
-
-/**
-* @throws InvalidArgumentException
-*/
-public function setVersion(string $version): self
-{
-if (!in_array($version, self::SUPPORTED_VERSIONS, true)) {
-throw new InvalidArgumentException(
-sprintf('Unsupported version: %s. Supported versions: %s',
-$version,
-implode(', ', self::SUPPORTED_VERSIONS)
-)
-);
-}
-
-$this->version = $version;
-return $this;
-}
-
-public function setPayload(array $payload): self
-{
-$this->validatePayload($payload);
-$this->payload = $payload;
-return $this;
-}
-
-/**
-* Allows setting a custom timestamp for testing purposes
-*/
-public function setTimestamp(DateTimeInterface $timestamp): self
-{
-$this->timestamp = $timestamp;
-return $this;
-}
-
-/**
-* @throws InvalidArgumentException
-*/
-public function build(): string
-{
-$this->validateRequiredFields();
-
-$header = $this->action === 'SessionCreateRQ'
-? $this->buildSessionCreateHeader()
-: $this->buildHeader();
-
-return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
-    <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        {$header}
-        <soap-env:Body>
-            {$this->buildBody()}
-        </soap-env:Body>
-    </soap-env:Envelope>
-    XML
-    );
+        return null;
     }
 
     private function buildHeader(): string
     {
-    return
-    <<<XML <soap-env:Header>
-        <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
-            <From>
-                <PartyId>Agency</PartyId>
-            </From>
-            <To>
-                <PartyId>Sabre_API</PartyId>
-            </To>
-            <ConversationId>{$this->generateConversationId()}</ConversationId>
-            <Action>{$this->action}</Action>
-            <MessageData>
-                <MessageId>{$this->generateMessageId()}</MessageId>
-                <Timestamp>{$this->getTimestamp()}</Timestamp>
-            </MessageData>
-        </MessageHeader>
-        <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
-            <BinarySecurityToken>{$this->token}</BinarySecurityToken>
-        </Security>
-        </soap-env:Header>
-        XML;
-        }
+        return null;
+    }
 
-        private function buildSessionCreateHeader(): string
-        {
-        return <<<XML <soap-env:Header>
-            <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
-                <From>
-                    <PartyId>Agency</PartyId>
-                </From>
-                <To>
-                    <PartyId>Sabre_API</PartyId>
-                </To>
-                <ConversationId>{$this->generateConversationId()}</ConversationId>
-                <Action>SessionCreateRQ</Action>
-            </MessageHeader>
-            <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
-                <UsernameToken>
-                    <Username>{$this->payload['username']}</Username>
-                    <Password>{$this->payload['password']}</Password>
-                    <Organization>{$this->pcc}</Organization>
-                    <Domain>{$this->getDomain()}</Domain>
-                </UsernameToken>
-            </Security>
-            </soap-env:Header>
-            XML;
-            }
+    private function buildSessionCreateHeader(): string
+    {
+        return null;
+    }
 
-            private function buildBody(): string
-            {
-            // Create a copy of payload to avoid modifying the original
-            $payload = $this->payload;
+    private function buildBody(): string
+    {
+        // Create a copy of payload to avoid modifying the original
+        $payload = $this->payload;
 
-            // Remove authentication related fields
-            unset(
+        // Remove authentication related fields
+        unset(
             $payload['username'],
             $payload['password'],
             $payload['organization'],
             $payload['domain']
-            );
+        );
 
-            $actionNode = $this->action;
-            if (!empty($this->version)) {
+        $actionNode = $this->action;
+        if (!empty($this->version)) {
             $actionNode .= sprintf(' Version="%s"', $this->version);
-            }
+        }
 
-            $namespace = $this->getNamespaceForAction();
-            if ($namespace) {
+        $namespace = $this->getNamespaceForAction();
+        if ($namespace) {
             $actionNode .= sprintf(' xmlns="%s"', $namespace);
-            }
+        }
 
-            return sprintf('<%1$s>%2$s</%1$s>',
+        return sprintf(
+            '<%1$s>%2$s</%1$s>',
             $actionNode,
             $this->arrayToXmlString($payload)
         );
@@ -254,7 +178,7 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
             }
 
             $attributes = $this->extractAttributes($array, $key);
-            
+
             if (is_array($value)) {
                 $content = $this->handleArrayValue($value, $key);
             } else {
@@ -272,7 +196,7 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
         if (array_keys($value) === range(0, count($value) - 1)) {
             return $this->handleNumericArray($value, $key);
         }
-        
+
         // Handle associative arrays
         return $this->arrayToXmlString($value);
     }
@@ -300,7 +224,8 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
         $attributes = '';
         if (isset($array["@{$key}"])) {
             foreach ($array["@{$key}"] as $attrKey => $attrValue) {
-                $attributes .= sprintf(' %s="%s"',
+                $attributes .= sprintf(
+                    ' %s="%s"',
                     $attrKey,
                     htmlspecialchars((string)$attrValue, ENT_XML1 | ENT_QUOTES, 'UTF-8')
                 );
@@ -350,7 +275,7 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
 
     private function validatePayload(array $payload): void
     {
-        array_walk_recursive($payload, function($value) {
+        array_walk_recursive($payload, function ($value) {
             if (is_object($value)) {
                 throw new InvalidArgumentException('Objects are not allowed in payload');
             }
@@ -383,19 +308,23 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
         return $this->namespaces[$this->action] ?? null;
     }
 
-    private function getNamespace(string $key): string 
+    private function getNamespace(string $key): string
     {
         return self::NAMESPACES[$key] ?? '';
     }
 
-    private function generateUuid(): string 
+    private function generateUuid(): string
     {
-        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        return sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
             mt_rand(0, 0xffff),
             mt_rand(0, 0x0fff) | 0x4000,
             mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
     }
 
@@ -416,12 +345,13 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
         if (empty($action) || empty($namespace)) {
             throw new InvalidArgumentException('Both action and namespace must be non-empty strings');
         }
-        
+
         $this->namespaces[$action] = $namespace;
         return $this;
     }
 
-    public function buildAuthenticationRequest(string $type, array $credentials): string {
+    public function buildAuthenticationRequest(string $type, array $credentials): string
+    {
         return match ($type) {
             'session' => $this->buildSessionCreateRequest($credentials),
             'stateless' => $this->buildTokenCreateRequest($credentials),
@@ -429,87 +359,19 @@ return $this->formatXml(<<<XML <?xml version="1.0" encoding="UTF-8" ?>
         };
     }
 
-    public function buildSessionCreateRequest(array $credentials): string 
+    public function buildSessionCreateRequest(array $credentials): string
     {
         $messageId = $this->generateUuid();
         $timestamp = date('Y-m-d\TH:i:s\Z');
 
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<soap-env:Envelope xmlns:soap-env="{$this->getNamespace('soap-env')}">
-    <soap-env:Header>
-        <eb:MessageHeader xmlns:eb="{$this->getNamespace('eb')}">
-            <eb:From>
-                <eb:PartyId>Agency</eb:PartyId>
-            </eb:From>
-            <eb:To>
-                <eb:PartyId>Sabre_API</eb:PartyId>
-            </eb:To>
-            <eb:ConversationId>{$this->generateConversationId()}</eb:ConversationId>
-            <eb:MessageData>
-                <eb:MessageId>{$messageId}</eb:MessageId>
-                <eb:Timestamp>{$timestamp}</eb:Timestamp>
-            </eb:MessageData>
-            <eb:Action>SessionCreateRQ</eb:Action>
-        </eb:MessageHeader>
-        <wsse:Security xmlns:wsse="{$this->getNamespace('wsse')}">
-            <wsse:UsernameToken>
-                <wsse:Username>{$credentials['username']}</wsse:Username>
-                <wsse:Password>{$credentials['password']}</wsse:Password>
-                <Organization>{$credentials['pcc']}</Organization>
-                <Domain>{$credentials['domain'] ?? 'DEFAULT'}</Domain>
-                <ClientId>{$credentials['client_id']}</ClientId>
-                <ClientSecret>{$credentials['client_secret']}</ClientSecret>
-            </wsse:UsernameToken>
-        </wsse:Security>
-    </soap-env:Header>
-    <soap-env:Body>
-        <SessionCreateRQ Version="2.0.0" xmlns="{$this->getNamespace('session')}">
-            <returnContextID>true</returnContextID>
-        </SessionCreateRQ>
-    </soap-env:Body>
-</soap-env:Envelope>
-XML;
+        return null;
     }
 
-    public function buildTokenCreateRequest(array $credentials): string 
+    public function buildTokenCreateRequest(array $credentials): string
     {
         $messageId = $this->generateUuid();
         $timestamp = date('Y-m-d\TH:i:s\Z');
 
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<soap-env:Envelope xmlns:soap-env="{$this->getNamespace('soap-env')}">
-    <soap-env:Header>
-        <eb:MessageHeader xmlns:eb="{$this->getNamespace('eb')}">
-            <eb:From>
-                <eb:PartyId>Agency</eb:PartyId>
-            </eb:From>
-            <eb:To>
-                <eb:PartyId>Sabre_API</eb:PartyId>
-            </eb:To>
-            <eb:ConversationId>{$this->generateConversationId()}</eb:ConversationId>
-            <eb:MessageData>
-                <eb:MessageId>{$messageId}</eb:MessageId>
-                <eb:Timestamp>{$timestamp}</eb:Timestamp>
-            </eb:MessageData>
-            <eb:Action>TokenCreateRQ</eb:Action>
-        </eb:MessageHeader>
-        <wsse:Security xmlns:wsse="{$this->getNamespace('wsse')}">
-            <wsse:UsernameToken>
-                <wsse:Username>{$credentials['username']}</wsse:Username>
-                <wsse:Password>{$credentials['password']}</wsse:Password>
-                <Organization>{$credentials['pcc']}</Organization>
-                <Domain>{$credentials['domain'] ?? 'DEFAULT'}</Domain>
-                <ClientId>{$credentials['client_id']}</ClientId>
-                <ClientSecret>{$credentials['client_secret']}</ClientSecret>
-            </wsse:UsernameToken>
-        </wsse:Security>
-    </soap-env:Header>
-    <soap-env:Body>
-        <TokenCreateRQ Version="2.0.0" xmlns="{$this->getNamespace('token')}"/>
-    </soap-env:Body>
-</soap-env:Envelope>
-XML;
+        return null;
     }
 }

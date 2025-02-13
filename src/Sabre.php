@@ -7,6 +7,8 @@ use Santosdave\SabreWrapper\Services\ServiceFactory;
 use Santosdave\SabreWrapper\Contracts\Services\AirShoppingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AirIntelligenceServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\CacheShoppingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
 
 class Sabre
@@ -34,10 +36,22 @@ class Sabre
         return $this->serviceFactory->createAirAvailabilityService($type);
     }
 
+    public function cacheShopping(string $type = ServiceFactory::REST): CacheShoppingServiceInterface
+    {
+        $this->logger->debug('Creating cache shopping service', ['type' => $type]);
+        return $this->serviceFactory->createCacheShoppingService($type);
+    }
+
+
     public function utility(string $type = ServiceFactory::REST): UtilityServiceInterface
     {
         $this->logger->debug('Creating utility service', ['type' => $type]);
         return $this->serviceFactory->createUtilityService($type);
+    }
+    public function intelligence(string $type = ServiceFactory::REST): AirIntelligenceServiceInterface
+    {
+        $this->logger->debug('Creating air intelligence service', ['type' => $type]);
+        return $this->serviceFactory->createAirIntelligenceService($type);
     }
 
     public function getLogger(): LoggerInterface
