@@ -8,30 +8,38 @@ use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 class OrderViewRequest implements SabreRequest
 {
     private string $orderId;
-    private ?array $filters = null;
-    private ?bool $includePayments = null;
-    private ?bool $includeDocuments = null;
+    private ?string $requestType = null;
+    private ?bool $displayPaymentCardNumbers = null;
+    private ?bool $reshop = null;
+    private ?bool $checkState = null;
 
     public function __construct(string $orderId)
     {
         $this->orderId = $orderId;
     }
 
-    public function setFilters(array $filters): self
+    // Add methods for optional parameters
+    public function setRequestType(string $type): self
     {
-        $this->filters = $filters;
+        $this->requestType = $type;
         return $this;
     }
 
-    public function setIncludePayments(bool $include): self
+    public function setDisplayPaymentCardNumbers(bool $display): self
     {
-        $this->includePayments = $include;
+        $this->displayPaymentCardNumbers = $display;
         return $this;
     }
 
-    public function setIncludeDocuments(bool $include): self
+    public function setReshop(bool $reshop): self
     {
-        $this->includeDocuments = $include;
+        $this->reshop = $reshop;
+        return $this;
+    }
+
+    public function setCheckState(bool $checkState): self
+    {
+        $this->checkState = $checkState;
         return $this;
     }
 
@@ -40,7 +48,6 @@ class OrderViewRequest implements SabreRequest
         if (empty($this->orderId)) {
             throw new SabreApiException('Order ID is required');
         }
-
         return true;
     }
 
@@ -52,16 +59,21 @@ class OrderViewRequest implements SabreRequest
             'id' => $this->orderId
         ];
 
-        if ($this->filters) {
-            $request['filters'] = $this->filters;
+        // Add optional fields
+        if ($this->requestType) {
+            $request['requestType'] = $this->requestType;
         }
 
-        if ($this->includePayments !== null) {
-            $request['includePayments'] = $this->includePayments;
+        if ($this->displayPaymentCardNumbers !== null) {
+            $request['displayPaymentCardNumbers'] = $this->displayPaymentCardNumbers;
         }
 
-        if ($this->includeDocuments !== null) {
-            $request['includeDocuments'] = $this->includeDocuments;
+        if ($this->reshop !== null) {
+            $request['reshop'] = $this->reshop;
+        }
+
+        if ($this->checkState !== null) {
+            $request['checkState'] = $this->checkState;
         }
 
         return $request;

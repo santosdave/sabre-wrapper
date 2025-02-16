@@ -8,12 +8,13 @@ class OrderChangeResponse implements SabreResponse
 {
     private bool $success;
     private array $errors = [];
+    private array $warnings = [];
+    private array $info = [];
     private array $data;
+
+    // Order details
     private ?array $order = null;
-    private ?array $changeResult = null;
-    private ?array $fulfillmentResult = null;
-    private ?array $paymentStatus = null;
-    private ?array $ticketingStatus = null;
+    private array $processingAlerts = [];
 
     public function __construct(array $response)
     {
@@ -30,6 +31,16 @@ class OrderChangeResponse implements SabreResponse
         return $this->errors;
     }
 
+    public function getWarnings(): array
+    {
+        return $this->warnings;
+    }
+
+    public function getInfo(): array
+    {
+        return $this->info;
+    }
+
     public function getData(): array
     {
         return $this->data;
@@ -40,57 +51,48 @@ class OrderChangeResponse implements SabreResponse
         return $this->order;
     }
 
-    public function getChangeResult(): ?array
+    public function getProcessingAlerts(): array
     {
-        return $this->changeResult;
-    }
-
-    public function getFulfillmentResult(): ?array
-    {
-        return $this->fulfillmentResult;
-    }
-
-    public function getPaymentStatus(): ?array
-    {
-        return $this->paymentStatus;
-    }
-
-    public function getTicketingStatus(): ?array
-    {
-        return $this->ticketingStatus;
+        return $this->processingAlerts;
     }
 
     private function parseResponse(array $response): void
     {
         $this->data = $response;
+        $this->success = false;
 
         if (isset($response['Errors'])) {
-            $this->success = false;
             $this->errors = $this->parseErrors($response['Errors']);
             return;
         }
 
-        $this->success = true;
+        $this->warnings = $this->parseMessages($response['warnings'] ?? [], 'warning');
+        $this->info = $this->parseMessages($response['info'] ?? [], 'info');
 
-        if (isset($response['Order'])) {
-            $this->parseOrder($response['Order']);
+        // Parse order details
+        if (isset($response['order'])) {
+            $this->order = $this->parseOrder($response['order']);
         }
 
-        if (isset($response['ChangeResult'])) {
-            $this->parseChangeResult($response['ChangeResult']);
+        // Parse processing alerts
+        if (isset($response['processingAlerts'])) {
+            $this->processingAlerts = $this->parseProcessingAlerts($response['processingAlerts']);
         }
 
-        if (isset($response['FulfillmentResult'])) {
-            $this->parseFulfillmentResult($response['FulfillmentResult']);
-        }
+        // Determine overall success
+        $this->success = empty($this->errors);
+    }
 
-        if (isset($response['PaymentStatus'])) {
-            $this->parsePaymentStatus($response['PaymentStatus']);
-        }
 
-        if (isset($response['TicketingStatus'])) {
-            $this->parseTicketingStatus($response['TicketingStatus']);
-        }
+    private function parseMessages(array $messages, string $type): array
+    {
+        return array_map(function ($message) use ($type) {
+            return [
+                'type' => $type,
+                'code' => $message['code'] ?? null,
+                'message' => $message['message'] ?? null
+            ];
+        }, $messages);
     }
 
     private function parseErrors(array $errors): array
@@ -105,30 +107,46 @@ class OrderChangeResponse implements SabreResponse
         }, (array) $errors['Error']);
     }
 
-    private function parseOrder(array $order): void
+    private function parseProcessingAlerts(array $alerts): array
     {
-        $this->order = [
-            'id' => $order['id'],
-            'status' => $order['Status'],
-            'lastModified' => $order['LastModifiedDate'] ?? null,
-            'items' => $this->parseOrderItems($order['OrderItems'] ?? []),
-            'price' => [
-                'total' => $order['TotalPrice']['Amount'] ?? null,
-                'currency' => $order['TotalPrice']['Currency'] ?? null
-            ]
+        return array_map(function ($alert) {
+            if (isset($alert['paymentAuthentication'])) {
+                return [
+                    'type' => 'payment_authentication',
+                    'authentication_url' => $alert['paymentAuthentication']['authenticationUrl'] ?? null,
+                    'transaction_id' => $alert['paymentAuthentication']['transactionId'] ?? null,
+                    'supplier_transaction_id' => $alert['paymentAuthentication']['supplierTransactionId'] ?? null
+                ];
+            }
+            return $alert;
+        }, $alerts);
+    }
+
+    private function parseOrder(array $orderData): array
+    {
+        return [
+            'id' => $orderData['id'] ?? null,
+            'type' => $orderData['type'] ?? null,
+            'pnr_locator' => $orderData['pnrLocator'] ?? null,
+            'create_date' => $orderData['pnrCreateDate'] ?? null,
+            'last_modified' => $orderData['LastModifiedDate'] ?? null,
+            'status' => $orderData['Status'] ?? null,
+            'order_items' => $this->parseOrderItems($orderData['orderItems'] ?? []),
+            'contact_infos' => $this->parseContactInfos($orderData['contactInfos'] ?? []),
+            'passengers' => $this->parsePassengers($orderData['passengers'] ?? []),
+            'total_price' => $this->parsePriceDetails($orderData['totalPrice'] ?? []),
+            'payment_time_limit' => $orderData['paymentTimeLimit'] ?? null
         ];
     }
+
 
     private function parseOrderItems(array $items): array
     {
         return array_map(function ($item) {
             return [
-                'id' => $item['id'],
-                'status' => $item['Status'],
-                'price' => [
-                    'amount' => $item['Price']['Amount'] ?? null,
-                    'currency' => $item['Price']['Currency'] ?? null
-                ],
+                'id' => $item['id'] ?? null,
+                'status' => $item['Status'] ?? null,
+                'price' => $this->parsePriceDetails($item['Price'] ?? []),
                 'service' => $this->parseService($item['Service'] ?? [])
             ];
         }, $items);
@@ -142,81 +160,78 @@ class OrderChangeResponse implements SabreResponse
             'status' => $service['Status'] ?? null,
             'segments' => array_map(function ($segment) {
                 return [
-                    'id' => $segment['id'],
+                    'id' => $segment['id'] ?? null,
                     'departure' => [
-                        'airport' => $segment['DepartureAirport'],
-                        'time' => $segment['DepartureTime']
+                        'airport' => $segment['DepartureAirport'] ?? null,
+                        'time' => $segment['DepartureTime'] ?? null
                     ],
                     'arrival' => [
-                        'airport' => $segment['ArrivalAirport'],
-                        'time' => $segment['ArrivalTime']
+                        'airport' => $segment['ArrivalAirport'] ?? null,
+                        'time' => $segment['ArrivalTime'] ?? null
                     ],
-                    'carrier' => $segment['MarketingCarrier'],
-                    'flightNumber' => $segment['FlightNumber']
+                    'carrier' => $segment['MarketingCarrier'] ?? null,
+                    'flight_number' => $segment['FlightNumber'] ?? null
                 ];
             }, $service['Segments'] ?? [])
         ];
     }
 
-    private function parseChangeResult(array $result): void
+    private function parseContactInfos(array $contacts): array
     {
-        $this->changeResult = [
-            'status' => $result['Status'],
-            'type' => $result['Type'],
-            'affectedItems' => array_map(function ($item) {
-                return [
-                    'id' => $item['id'],
-                    'status' => $item['Status'],
-                    'changeType' => $item['ChangeType']
-                ];
-            }, $result['AffectedItems'] ?? [])
-        ];
+        return array_map(function ($contact) {
+            return [
+                'id' => $contact['id'] ?? null,
+                'phones' => $this->parsePhones($contact['phones'] ?? []),
+                'email_addresses' => $this->parseEmailAddresses($contact['emailAddresses'] ?? [])
+            ];
+        }, $contacts);
     }
 
-    private function parseFulfillmentResult(array $result): void
+    private function parsePassengers(array $passengers): array
     {
-        $this->fulfillmentResult = [
-            'status' => $result['Status'],
-            'payments' => array_map(function ($payment) {
-                return [
-                    'id' => $payment['id'],
-                    'status' => $payment['Status'],
-                    'amount' => $payment['Amount'],
-                    'currency' => $payment['Currency']
-                ];
-            }, $result['Payments'] ?? []),
-            'documents' => array_map(function ($document) {
-                return [
-                    'id' => $document['id'],
-                    'type' => $document['Type'],
-                    'number' => $document['Number'],
-                    'status' => $document['Status']
-                ];
-            }, $result['Documents'] ?? [])
-        ];
+        return array_map(function ($passenger) {
+            return [
+                'id' => $passenger['id'] ?? null,
+                'type_code' => $passenger['typeCode'] ?? null,
+                'given_name' => $passenger['givenName'] ?? null,
+                'surname' => $passenger['surname'] ?? null,
+                'birthdate' => $passenger['birthdate'] ?? null
+            ];
+        }, $passengers);
     }
 
-    private function parsePaymentStatus(array $status): void
+    private function parsePhones(array $phones): array
     {
-        $this->paymentStatus = [
-            'status' => $status['Status'],
-            'authorizationCode' => $status['AuthorizationCode'] ?? null,
-            'paymentMethod' => $status['PaymentMethod'] ?? null,
-            'amount' => [
-                'value' => $status['Amount']['Value'] ?? null,
-                'currency' => $status['Amount']['Currency'] ?? null
-            ]
-        ];
+        return array_map(function ($phone) {
+            return [
+                'id' => $phone['id'] ?? null,
+                'number' => $phone['number'] ?? null,
+                'country_code' => $phone['countryCode'] ?? null
+            ];
+        }, $phones);
     }
 
-    private function parseTicketingStatus(array $status): void
+    private function parseEmailAddresses(array $emails): array
     {
-        $this->ticketingStatus = [
-            'status' => $status['Status'],
-            'ticketNumbers' => $status['TicketNumbers'] ?? [],
-            'issuedBy' => $status['IssuedBy'] ?? null,
-            'issuedAt' => $status['IssuedAt'] ?? null,
-            'validatingCarrier' => $status['ValidatingCarrier'] ?? null
+        return array_map(function ($email) {
+            return [
+                'id' => $email['id'] ?? null,
+                'address' => $email['address'] ?? null,
+                'label' => $email['label'] ?? null
+            ];
+        }, $emails);
+    }
+
+
+    private function parsePriceDetails(array $priceDetails): ?array
+    {
+        if (empty($priceDetails)) {
+            return null;
+        }
+
+        return [
+            'amount' => $priceDetails['Amount'] ?? null,
+            'currency' => $priceDetails['Currency'] ?? null
         ];
     }
 }
