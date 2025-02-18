@@ -77,9 +77,9 @@ class BargainFinderMaxRequest implements SabreRequest
             }, $cabinPrefs);
         }
 
-        if ($directFlights !== null) {
-            $prefs['DirectFlights'] = $directFlights;
-        }
+        // if ($directFlights !== null) {
+        //     $prefs['DirectFlightsOnly'] = $directFlights;
+        // }
 
         $this->travelPreferences = $prefs;
         return $this;
@@ -94,6 +94,15 @@ class BargainFinderMaxRequest implements SabreRequest
                     'Quantity' => $quantity
                 ]
             ]
+        ];
+        return $this;
+    }
+
+
+    public function addCurrencyOverride(string $currency): self
+    {
+        $this->travelerInfoSummary['PriceRequestInformation'] = [
+            'CurrencyCode' => $currency
         ];
         return $this;
     }
@@ -159,6 +168,7 @@ class BargainFinderMaxRequest implements SabreRequest
                 'TravelPreferences' => array_merge(
                     $this->travelPreferences,
                     [
+                        'ETicketDesired' => true,
                         'TPA_Extensions' => [
                             'NumTrips' => [
                                 'Number' => $this->numTrips
