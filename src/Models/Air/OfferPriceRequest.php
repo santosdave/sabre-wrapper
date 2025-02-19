@@ -54,13 +54,11 @@ class OfferPriceRequest implements SabreRequest
         string $binNumber = null,
         ?string $subCode = null
     ): self {
-        $this->formOfPayment = [
-            'paymentCard' => array_filter([
-                'cardType' => $cardType,
-                'binNumber' => $binNumber,
-                'subCode' => $subCode
-            ])
-        ];
+        $this->formOfPayment = array_filter([
+            'cardType' => $cardType,
+            'binNumber' => $binNumber,
+            'subCode' => $subCode
+        ]);
         return $this;
     }
 

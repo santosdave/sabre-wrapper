@@ -150,7 +150,7 @@ class OfferPriceResponse implements SabreResponse
                 'ttl' => $offer['ttl'] ?? null,
                 'source' => $offer['source'] ?? null,
                 'expiration' => $offer['offerExpirationDateTime'] ?? null,
-                'payment_time_limit' => $offer['paymentTimeLimitText'] ?? null,
+                'payment_time_limit' => $offer['paymentTimeLimitDateTime'] ?? null,
                 'journeys' => $this->parseJourneys($offer['journeys'] ?? []),
                 'offer_items' => $this->parseOfferItems($offer['offerItems'] ?? []),
                 'total_price' => $offer['totalPrice']['totalAmount'] ?? null
