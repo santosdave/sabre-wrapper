@@ -14,7 +14,7 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
     {
         try {
             $response = $this->client->post(
-                '/v1/offers/getAncillaries',
+                '/v2/offers/getAncillaries',
                 $request->toArray()
             );
             return new AncillaryResponse($response);
@@ -29,8 +29,16 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
     public function getPrebookableAncillaries(string $orderId): AncillaryResponse
     {
         try {
-            $response = $this->client->get(
-                "/v1/orders/{$orderId}/ancillaries/prebookable"
+            $request = new AncillaryRequest();
+            $request->setOrderId($orderId);
+
+            // Add flag for prebookable services
+            $response = $this->client->post(
+                '/v2/offers/getAncillaries',
+                array_merge(
+                    $request->toArray(),
+                    ['ancillaryType' => 'PREBOOKABLE']
+                )
             );
             return new AncillaryResponse($response);
         } catch (\Exception $e) {
@@ -46,14 +54,22 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
         ?array $segments = null
     ): AncillaryResponse {
         try {
-            $params = [];
+            $request = new AncillaryRequest();
+            $request->setOrderId($orderId);
+
+            // Add segments if provided
             if ($segments) {
-                $params['segments'] = $segments;
+                foreach ($segments as $segmentRef) {
+                    $request->addRequestedSegmentRef($segmentRef);
+                }
             }
 
-            $response = $this->client->get(
-                "/v1/orders/{$orderId}/ancillaries/postbookable",
-                $params
+            $response = $this->client->post(
+                '/v2/offers/getAncillaries',
+                array_merge(
+                    $request->toArray(),
+                    ['ancillaryType' => 'POSTBOOKABLE']
+                )
             );
             return new AncillaryResponse($response);
         } catch (\Exception $e) {
@@ -72,16 +88,20 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
     ): AncillaryResponse {
         try {
             $request = [
-                'serviceId' => $serviceId,
-                'passengers' => $passengers
+                'orderId' => $orderId,
+                'serviceRequest' => [
+                    'serviceId' => $serviceId,
+                    'passengers' => $passengers
+                ]
             ];
 
+            // Add optional payment information
             if ($paymentInfo) {
                 $request['paymentInfo'] = $paymentInfo;
             }
 
             $response = $this->client->post(
-                "/v1/orders/{$orderId}/ancillaries",
+                '/v2/offers/addAncillaryToOrder',
                 $request
             );
             return new AncillaryResponse($response);
@@ -99,7 +119,11 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
     ): AncillaryResponse {
         try {
             $response = $this->client->post(
-                "/v1/orders/{$orderId}/ancillaries/{$serviceId}"
+                '/v2/offers/removeAncillaryFromOrder',
+                [
+                    'orderId' => $orderId,
+                    'serviceId' => $serviceId
+                ]
             );
             return new AncillaryResponse($response);
         } catch (\Exception $e) {
@@ -115,7 +139,7 @@ class AncillaryService extends BaseRestService implements AncillaryServiceInterf
         string $carrierCode
     ): AncillaryResponse {
         try {
-            $response = $this->client->get('/v1/ancillaries/rules', [
+            $response = $this->client->get('/v2/offers/ancillaryRules', [
                 'serviceCode' => $serviceCode,
                 'carrierCode' => $carrierCode
             ]);

@@ -7,150 +7,201 @@ use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class SeatMapRequest implements SabreRequest
 {
-    private string $requestType;
-    private array $party;
-    private array $request;
+    private string $requestType = 'offerId';
+    private string $source = 'NDC';
 
-    public function __construct(string $requestType = 'payload')
+    // Common parameters
+    private ?string $agentDutyCode = '*';
+    private ?string $countryCode = 'US';
+    private ?string $cityCode = 'SFO';
+
+    // Request-specific parameters
+    private ?string $offerId = null;
+    private ?string $orderId = null;
+    private ?string $pnrLocator = null;
+    private array $segmentRefIds = [];
+    private array $passengers = [];
+    private array $fareComponents = [];
+    private ?string $currency = null;
+    private array $originDestinationSegments = [];
+
+    public function setRequestType(string $type): self
     {
-        $this->requestType = $requestType;
-    }
-
-    public function setTravelAgencyParty(
-        string $pseudoCityId,
-        string $agencyId
-    ): self {
-        $this->party = [
-            'sender' => [
-                'travelAgency' => [
-                    'pseudoCityID' => $pseudoCityId,
-                    'agencyID' => $agencyId
-                ]
-            ]
-        ];
+        $this->requestType = $type;
         return $this;
     }
 
-    public function addFlightSegment(
-        string $origin,
-        string $destination,
-        string $departureDate,
-        string $carrierCode,
-        string $flightNumber,
-        string $bookingClass,
-        string $cabinType = 'Y',
-        ?string $operatingCarrier = null
-    ): self {
-        if (!isset($this->request['originDest'])) {
-            $this->request['originDest'] = [
-                'paxJourney' => [
-                    'paxSegments' => []
-                ]
-            ];
-        }
-
-        $segment = [
-            'paxSegmentId' => 'segment1',
-            'departure' => [
-                'locationCode' => $origin,
-                'aircraftScheduledDate' => [
-                    'date' => $departureDate
-                ]
-            ],
-            'arrival' => [
-                'locationCode' => $destination,
-                'aircraftScheduledDate' => [
-                    'date' => $departureDate
-                ]
-            ],
-            'marketingCarrierInfo' => [
-                'bookingCode' => $bookingClass,
-                'carrierCode' => $carrierCode,
-                'carrierFlightNumber' => $flightNumber
-            ],
-            'cabinType' => [
-                'cabinTypeCode' => $cabinType,
-                'cabinTypeName' => $this->getCabinTypeName($cabinType)
-            ]
-        ];
-
-        if ($operatingCarrier) {
-            $segment['operatingCarrierInfo'] = [
-                'bookingCode' => $bookingClass,
-                'carrierCode' => $operatingCarrier,
-                'carrierFlightNumber' => $flightNumber
-            ];
-        } else {
-            $segment['operatingCarrierInfo'] = $segment['marketingCarrierInfo'];
-        }
-
-        $this->request['originDest']['paxJourney']['paxSegments'][] = $segment;
-        $this->request['paxSegmentRefIds'] = ['segment1'];
-
-        return $this;
-    }
-
-    public function addPassenger(
-        string $paxId,
-        string $ptc,
-        ?string $birthDate = null,
-        ?string $givenName = null,
-        ?string $surname = null
-    ): self {
-        if (!isset($this->request['paxes'])) {
-            $this->request['paxes'] = [];
-        }
-
-        $passenger = [
-            'paxID' => $paxId,
-            'ptc' => $ptc
-        ];
-
-        if ($birthDate) {
-            $passenger['birthday'] = $birthDate;
-        }
-
-        if ($givenName) {
-            $passenger['givenName'] = $givenName;
-        }
-
-        if ($surname) {
-            $passenger['surname'] = $surname;
-        }
-
-        $this->request['paxes'][] = $passenger;
-        return $this;
-    }
-
-    private function getCabinTypeName(string $code): string
+    public function getRequestType(): string
     {
-        switch ($code) {
-            case 'F':
-                return 'First';
-            case 'J':
-            case 'C':
-                return 'Business';
-            case 'S':
-                return 'Premium Economy';
-            case 'Y':
-                return 'Economy';
-            default:
-                return 'Economy';
-        }
+        return $this->requestType;
+    }
+
+    public function setSource(string $source): self
+    {
+        $this->source = $source;
+        return $this;
+    }
+
+    public function getSource(): string
+    {
+        return $this->source;
+    }
+
+    // Setters for point of sale
+    public function setAgentDutyCode(?string $code): self
+    {
+        $this->agentDutyCode = $code;
+        return $this;
+    }
+
+    public function getAgentDutyCode(): ?string
+    {
+        return $this->agentDutyCode;
+    }
+
+    public function setCountryCode(?string $code): self
+    {
+        $this->countryCode = $code;
+        return $this;
+    }
+
+    public function getCountryCode(): ?string
+    {
+        return $this->countryCode;
+    }
+
+    public function setCityCode(?string $code): self
+    {
+        $this->cityCode = $code;
+        return $this;
+    }
+
+    public function getCityCode(): ?string
+    {
+        return $this->cityCode;
+    }
+
+    // Specific request type setters
+    public function setOfferId(string $offerId): self
+    {
+        $this->offerId = $offerId;
+        $this->requestType = 'offerId';
+        return $this;
+    }
+
+    public function getOfferId(): ?string
+    {
+        return $this->offerId;
+    }
+
+    public function setOrderId(string $orderId): self
+    {
+        $this->orderId = $orderId;
+        $this->requestType = 'orderId';
+        return $this;
+    }
+
+    public function getOrderId(): ?string
+    {
+        return $this->orderId;
+    }
+
+    public function setPnrLocator(string $pnrLocator): self
+    {
+        $this->pnrLocator = $pnrLocator;
+        $this->requestType = 'stateless';
+        return $this;
+    }
+
+    public function getPnrLocator(): ?string
+    {
+        return $this->pnrLocator;
+    }
+
+    public function addSegmentRefId(string $segmentRefId): self
+    {
+        $this->segmentRefIds[] = $segmentRefId;
+        $this->requestType = 'payload';
+        return $this;
+    }
+
+    public function getSegmentRefIds(): array
+    {
+        return $this->segmentRefIds;
+    }
+
+    public function addPassenger(array $passenger): self
+    {
+        $this->passengers[] = $passenger;
+        return $this;
+    }
+
+    public function getPassengers(): array
+    {
+        return $this->passengers;
+    }
+
+    public function addFareComponent(array $fareComponent): self
+    {
+        $this->fareComponents[] = $fareComponent;
+        return $this;
+    }
+
+    public function getFareComponents(): array
+    {
+        return $this->fareComponents;
+    }
+
+    public function setCurrency(string $currency): self
+    {
+        $this->currency = $currency;
+        return $this;
+    }
+
+    public function getCurrency(): ?string
+    {
+        return $this->currency;
+    }
+
+    public function addOriginDestinationSegment(array $segment): self
+    {
+        $this->originDestinationSegments[] = $segment;
+        return $this;
+    }
+
+    public function getOriginDestinationSegments(): array
+    {
+        return $this->originDestinationSegments;
     }
 
     public function validate(): bool
     {
-        if (empty($this->party)) {
-            throw new SabreApiException('Travel agency party information is required');
-        }
-
-        if (empty($this->request['originDest']['paxJourney']['paxSegments'])) {
-            throw new SabreApiException('At least one flight segment is required');
-        }
-
-        if (empty($this->request['paxes'])) {
-            throw new SabreApiException('At least one passenger is required');
+        switch ($this->requestType) {
+            case 'offerId':
+                if (empty($this->offerId)) {
+                    throw new SabreApiException('Offer ID is required for offerId request type');
+                }
+                break;
+            case 'orderId':
+                if (empty($this->orderId)) {
+                    throw new SabreApiException('Order ID is required for orderId request type');
+                }
+                break;
+            case 'payload':
+                if (empty($this->segmentRefIds)) {
+                    throw new SabreApiException('Segment Reference IDs are required for payload request type');
+                }
+                if (empty($this->passengers)) {
+                    throw new SabreApiException('Passengers are required for payload request type');
+                }
+                break;
+            case 'stateless':
+                if (empty($this->pnrLocator)) {
+                    throw new SabreApiException('PNR Locator is required for stateless request type');
+                }
+                break;
+            default:
+                throw new SabreApiException("Invalid request type: {$this->requestType}");
         }
 
         return true;
@@ -160,10 +211,8 @@ class SeatMapRequest implements SabreRequest
     {
         $this->validate();
 
-        return [
-            'requestType' => $this->requestType,
-            'party' => $this->party,
-            'request' => $this->request
-        ];
+        // The actual conversion will be handled in the SeatService
+        // This method is just to satisfy the SabreRequest interface
+        return [];
     }
 }

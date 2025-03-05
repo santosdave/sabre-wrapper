@@ -77,10 +77,16 @@ class BookingService extends BaseRestService implements AirBookingServiceInterfa
     public function createBooking(CreateBookingRequest $request): CreateBookingResponse
     {
         try {
-            $response = $this->client->post(
-                '/v1/trip/orders/createBooking',
-                $request->toArray()
-            );
+            // Determine the appropriate endpoint based on booking type
+            $endpoint = $this->determineBookingEndpoint($request);
+
+            // Prepare the request payload
+            $payload = $this->prepareBookingPayload($request);
+
+            // Make the API call
+            $response = $this->client->post($endpoint, $payload);
+
+            // Create and return the booking response
             return new CreateBookingResponse($response);
         } catch (\Exception $e) {
             throw new SabreApiException(
@@ -88,6 +94,73 @@ class BookingService extends BaseRestService implements AirBookingServiceInterfa
                 $e->getCode()
             );
         }
+    }
+
+    private function determineBookingEndpoint(CreateBookingRequest $request): string
+    {
+        // Check if it's an NDC booking (has flightOffer)
+        if ($request->hasNdcOffer()) {
+            return '/v1/trip/orders/createBooking';
+        }
+
+        // For non-NDC bookings, use traditional endpoint
+        return '/v1/trip/orders/createBooking';
+    }
+
+    private function prepareBookingPayload(CreateBookingRequest $request): array
+    {
+        $payload = $request->toArray();
+
+        // Additional preprocessing for specific booking types
+        if ($request->hasNdcOffer()) {
+            // NDC-specific payload modifications
+            $payload = $this->preprocessNdcBooking($payload);
+        } else {
+            // Non-NDC specific payload modifications
+            $payload = $this->preprocessTraditionalBooking($payload);
+        }
+
+        return $payload;
+    }
+
+    private function preprocessNdcBooking(array $payload): array
+    {
+        // Add default values for NDC booking if not present
+        $payload['asynchronousUpdateWaitTime'] = $payload['asynchronousUpdateWaitTime'] ?? 3000;
+
+        // Ensure consistent payload structure
+        if (isset($payload['flightOffer'])) {
+            $payload['flightOffer'] = [
+                'offerId' => $payload['flightOffer']['offerId'] ?? null,
+                'selectedOfferItems' => $payload['flightOffer']['selectedOfferItems'] ?? []
+            ];
+        }
+
+        return $payload;
+    }
+
+    private function preprocessTraditionalBooking(array $payload): array
+    {
+        // Add default agency information if not present
+        if (!isset($payload['agency'])) {
+            $payload['agency'] = [
+                'address' => [
+                    'countryCode' => 'KE'
+                ]
+            ];
+        }
+
+        // Ensure flight details are properly structured
+        if (isset($payload['flightDetails']['flights'])) {
+            $payload['flightDetails']['flights'] = array_map(function ($flight) {
+                // Set default values for missing fields
+                $flight['flightStatusCode'] = $flight['flightStatusCode'] ?? 'NN';
+                $flight['marriageGroup'] = $flight['marriageGroup'] ?? false;
+                return $flight;
+            }, $payload['flightDetails']['flights']);
+        }
+
+        return $payload;
     }
 
     public function getBooking(string $confirmationId): CreateBookingResponse

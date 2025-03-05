@@ -9,8 +9,10 @@ use Santosdave\SabreWrapper\Contracts\Services\AirBookingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirAvailabilityServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirIntelligenceServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\AirPricingServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\AncillaryServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\CacheShoppingServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\OrderManagementServiceInterface;
+use Santosdave\SabreWrapper\Contracts\Services\SeatServiceInterface;
 use Santosdave\SabreWrapper\Contracts\Services\UtilityServiceInterface;
 
 class Sabre
@@ -57,6 +59,17 @@ class Sabre
         return $this->serviceFactory->createCacheShoppingService($type);
     }
 
+    public function seat(string $type = ServiceFactory::REST): SeatServiceInterface
+    {
+        $this->logger->debug('Creating seat service', ['type' => $type]);
+        return $this->serviceFactory->createSeatService($type);
+    }
+
+    public function ancillary(string $type = ServiceFactory::REST): AncillaryServiceInterface
+    {
+        $this->logger->debug('Creating ancillary service', ['type' => $type]);
+        return $this->serviceFactory->createAncillaryService($type);
+    }
 
     public function utility(string $type = ServiceFactory::REST): UtilityServiceInterface
     {

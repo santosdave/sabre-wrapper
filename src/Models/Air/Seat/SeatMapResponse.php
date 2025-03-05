@@ -9,13 +9,15 @@ class SeatMapResponse implements SabreResponse
     private bool $success;
     private array $errors = [];
     private array $data;
-    private array $cabins = [];
-    private ?array $aircraft = null;
-    private ?array $seatAvailability = null;
-    private ?array $pricing = null;
+    private string $source;
 
-    public function __construct(array $response)
+    private array $seatMaps = [];
+    private ?array $aLaCarteOffer = null;
+    private ?array $shoppingResponse = null;
+
+    public function __construct(array $response, string $source = 'NDC')
     {
+        $this->source = $source;
         $this->parseResponse($response);
     }
 
@@ -34,161 +36,167 @@ class SeatMapResponse implements SabreResponse
         return $this->data;
     }
 
-    public function getCabins(): array
+    public function getSource(): string
     {
-        return $this->cabins;
+        return $this->source;
     }
 
-    public function getAircraft(): ?array
+    public function getSeatMaps(): array
     {
-        return $this->aircraft;
+        return $this->seatMaps;
     }
 
-    public function getSeatAvailability(): ?array
+    public function getALaCarteOffer(): ?array
     {
-        return $this->seatAvailability;
+        return $this->aLaCarteOffer;
     }
 
-    public function getPricing(): ?array
+    public function getShoppingResponse(): ?array
     {
-        return $this->pricing;
+        return $this->shoppingResponse;
     }
 
     private function parseResponse(array $response): void
     {
         $this->data = $response;
 
-        if (isset($response['Errors'])) {
+        // Check for errors
+        if (isset($response['errors']) && !empty($response['errors'])) {
             $this->success = false;
-            $this->errors = $this->parseErrors($response['Errors']);
+            $this->errors = $this->parseErrors($response['errors']);
             return;
         }
 
-        $this->success = true;
+        // Validate response based on source
+        switch ($this->source) {
+            case 'NDC':
+                $this->parseNDCResponse($response);
+                break;
+            case 'ATPCO':
+                $this->parseATPCOResponse($response);
+                break;
+            case 'LCC':
+                $this->parseLCCResponse($response);
+                break;
+            default:
+                $this->parseGenericResponse($response);
+        }
+    }
 
-        if (isset($response['SeatMap'])) {
-            $this->parseSeatMap($response['SeatMap']);
+    private function parseNDCResponse(array $response): void
+    {
+        $seatAvailabilityResponse = $response['response'] ?? $response;
+
+        // Set success status
+        $this->success = isset($seatAvailabilityResponse['seatMaps']);
+
+        // Parse A La Carte Offer
+        if (isset($seatAvailabilityResponse['aLaCarteOffer'])) {
+            $this->aLaCarteOffer = $this->parseALaCarteOffer($seatAvailabilityResponse['aLaCarteOffer']);
         }
 
-        if (isset($response['Aircraft'])) {
-            $this->parseAircraft($response['Aircraft']);
+        // Parse Shopping Response
+        if (isset($seatAvailabilityResponse['shoppingResponse'])) {
+            $this->shoppingResponse = $this->parseShoppingResponse($seatAvailabilityResponse['shoppingResponse']);
         }
 
-        if (isset($response['SeatAvailability'])) {
-            $this->parseSeatAvailability($response['SeatAvailability']);
+        // Parse Seat Maps
+        if (isset($seatAvailabilityResponse['seatMaps'])) {
+            $this->seatMaps = array_map([$this, 'parseSeatMap'], $seatAvailabilityResponse['seatMaps']);
         }
+    }
 
-        if (isset($response['Pricing'])) {
-            $this->parsePricing($response['Pricing']);
-        }
+    private function parseATPCOResponse(array $response): void
+    {
+        // ATPCO-specific parsing logic
+        $this->parseNDCResponse($response);
+    }
+
+    private function parseLCCResponse(array $response): void
+    {
+        // Low Cost Carrier specific parsing logic
+        $this->parseNDCResponse($response);
+    }
+
+    private function parseGenericResponse(array $response): void
+    {
+        // Fallback parsing method
+        $this->parseNDCResponse($response);
     }
 
     private function parseErrors(array $errors): array
     {
         return array_map(function ($error) {
             return [
-                'code' => $error['Code'] ?? null,
-                'message' => $error['Message'] ?? 'Unknown error',
-                'type' => $error['Type'] ?? null,
-                'details' => $error['Details'] ?? null
+                'code' => $error['code'] ?? null,
+                'message' => $error['descriptionText'] ?? 'Unknown error',
+                'type' => $error['typeCode'] ?? null
             ];
-        }, (array) $errors['Error']);
+        }, $errors);
     }
 
-    private function parseSeatMap(array $seatMap): void
+    private function parseSeatMap(array $seatMap): array
     {
-        foreach ($seatMap as $cabin) {
-            if (isset($cabin['Cabin'])) {
-                $this->cabins[] = [
-                    'type' => $cabin['CabinType'] ?? null,
-                    'layout' => $this->parseCabinLayout($cabin['Layout'] ?? []),
-                    'rows' => $this->parseRows($cabin['Rows'] ?? []),
-                    'facilities' => $this->parseFacilities($cabin['Facilities'] ?? [])
+        $parsedSeatMap = [
+            'segment_ref_id' => $seatMap['paxSegmentRefID'] ?? null,
+            'sellable' => $seatMap['sellable'] ?? false,
+            'cabins' => []
+        ];
+
+        // Parse cabin compartments
+        if (isset($seatMap['cabinCompartments'])) {
+            $parsedSeatMap['cabins'] = array_map(function ($cabin) {
+                return [
+                    'deck_code' => $cabin['deckCode'] ?? null,
+                    'first_row' => $cabin['firstRow'] ?? null,
+                    'last_row' => $cabin['lastRow'] ?? null,
+                    'cabin_type' => $cabin['cabinType']['cabinTypeCode'] ?? null,
+                    'seats' => $this->parseSeats($cabin)
                 ];
+            }, $seatMap['cabinCompartments']);
+        }
+
+        return $parsedSeatMap;
+    }
+
+    private function parseSeats(array $cabin): array
+    {
+        $seats = [];
+
+        if (isset($cabin['seatRows'])) {
+            foreach ($cabin['seatRows'] as $row) {
+                foreach ($row['seats'] as $seat) {
+                    $seats[] = [
+                        'row' => $row['row'],
+                        'column' => $seat['column'],
+                        'characteristics' => $seat['characteristics']
+                            ? array_column($seat['characteristics'], 'code')
+                            : [],
+                        'occupation_status' => $seat['occupationStatusCode'] ?? null,
+                        'offer_item_ref_ids' => $seat['offerItemRefIDs'] ?? []
+                    ];
+                }
             }
         }
+
+        return $seats;
     }
 
-    private function parseCabinLayout(array $layout): array
+    private function parseALaCarteOffer(array $aLaCarteOffer): array
     {
         return [
-            'firstSeatLetter' => $layout['FirstSeatLetter'] ?? null,
-            'lastSeatLetter' => $layout['LastSeatLetter'] ?? null,
-            'startingRow' => $layout['StartingRow'] ?? null,
-            'endingRow' => $layout['EndingRow'] ?? null,
-            'seatsAbreast' => $layout['SeatsAbreast'] ?? null
+            'offer_id' => $aLaCarteOffer['offerId'] ?? null,
+            'owner_code' => $aLaCarteOffer['ownerCode'] ?? null,
+            'total_price' => $aLaCarteOffer['totalPrice'] ?? null,
+            'offer_items' => $aLaCarteOffer['aLaCarteOfferItems'] ?? []
         ];
     }
 
-    private function parseRows(array $rows): array
+    private function parseShoppingResponse(array $shoppingResponse): array
     {
-        return array_map(function ($row) {
-            return [
-                'number' => $row['RowNumber'],
-                'seats' => array_map(function ($seat) {
-                    return [
-                        'number' => $seat['Number'],
-                        'letter' => $seat['Letter'],
-                        'availability' => $seat['Availability'],
-                        'characteristics' => $seat['Characteristics'] ?? [],
-                        'price' => $seat['Price'] ?? null,
-                        'restrictions' => $seat['Restrictions'] ?? []
-                    ];
-                }, $row['Seats'] ?? [])
-            ];
-        }, $rows);
-    }
-
-    private function parseFacilities(array $facilities): array
-    {
-        return array_map(function ($facility) {
-            return [
-                'type' => $facility['Type'],
-                'location' => $facility['Location'],
-                'rowNumber' => $facility['RowNumber'] ?? null,
-                'description' => $facility['Description'] ?? null
-            ];
-        }, $facilities);
-    }
-
-    private function parseAircraft(array $aircraft): void
-    {
-        $this->aircraft = [
-            'type' => $aircraft['Type'],
-            'configuration' => $aircraft['Configuration'] ?? null,
-            'details' => [
-                'manufacturer' => $aircraft['Details']['Manufacturer'] ?? null,
-                'model' => $aircraft['Details']['Model'] ?? null,
-                'seatsTotal' => $aircraft['Details']['SeatsTotal'] ?? null
-            ]
-        ];
-    }
-
-    private function parseSeatAvailability(array $availability): void
-    {
-        $this->seatAvailability = array_map(function ($entry) {
-            return [
-                'cabin' => $entry['Cabin'],
-                'availableSeats' => $entry['AvailableSeats'],
-                'restrictions' => $entry['Restrictions'] ?? [],
-                'seatFeatures' => $entry['SeatFeatures'] ?? []
-            ];
-        }, $availability);
-    }
-
-    private function parsePricing(array $pricing): void
-    {
-        $this->pricing = [
-            'currency' => $pricing['Currency'],
-            'categories' => array_map(function ($category) {
-                return [
-                    'code' => $category['Code'],
-                    'name' => $category['Name'],
-                    'amount' => $category['Amount'],
-                    'features' => $category['Features'] ?? [],
-                    'restrictions' => $category['Restrictions'] ?? []
-                ];
-            }, $pricing['Categories'] ?? [])
+        return [
+            'shopping_response_id' => $shoppingResponse['shoppingResponseID'] ?? null,
+            'owner_code' => $shoppingResponse['ownerCode'] ?? null
         ];
     }
 }

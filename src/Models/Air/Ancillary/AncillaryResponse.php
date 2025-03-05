@@ -9,10 +9,14 @@ class AncillaryResponse implements SabreResponse
     private bool $success;
     private array $errors = [];
     private array $data;
-    private array $services = [];
-    private ?array $pricing = null;
-    private ?array $availability = null;
-    private ?array $rules = null;
+
+    // Detailed response components
+    private array $segments = [];
+    private array $passengers = [];
+    private ?array $offer = null;
+    private array $serviceDefinitions = [];
+    private array $priceDefinitions = [];
+    private array $warnings = [];
 
     public function __construct(array $response)
     {
@@ -34,52 +38,81 @@ class AncillaryResponse implements SabreResponse
         return $this->data;
     }
 
-    public function getServices(): array
+    public function getSegments(): array
     {
-        return $this->services;
+        return $this->segments;
     }
 
-    public function getPricing(): ?array
+    public function getPassengers(): array
     {
-        return $this->pricing;
+        return $this->passengers;
     }
 
-    public function getAvailability(): ?array
+    public function getOffer(): ?array
     {
-        return $this->availability;
+        return $this->offer;
     }
 
-    public function getRules(): ?array
+    public function getServiceDefinitions(): array
     {
-        return $this->rules;
+        return $this->serviceDefinitions;
+    }
+
+    public function getPriceDefinitions(): array
+    {
+        return $this->priceDefinitions;
+    }
+
+    public function getWarnings(): array
+    {
+        return $this->warnings;
     }
 
     private function parseResponse(array $response): void
     {
         $this->data = $response;
 
-        if (isset($response['Errors'])) {
+        // Check for top-level errors
+        if (isset($response['errors']) && !empty($response['errors'])) {
             $this->success = false;
-            $this->errors = $this->parseErrors($response['Errors']);
+            $this->errors = $this->parseErrors($response['errors']);
             return;
         }
 
-        $this->success = true;
+        // Check for NDC ancillary response
+        $ancillaryResponse = $response['response']['ancillaries'] ?? $response['ancillaries'] ?? $response;
 
-        if (isset($response['Services'])) {
-            $this->parseServices($response['Services']);
+        // Determine success
+        $this->success = isset($ancillaryResponse['serviceDefinitions']);
+
+        // Parse warnings
+        if (isset($response['warnings'])) {
+            $this->warnings = $this->parseWarnings($response['warnings']);
         }
 
-        if (isset($response['Pricing'])) {
-            $this->parsePricing($response['Pricing']);
+        // Parse offer
+        if (isset($ancillaryResponse['offer'])) {
+            $this->offer = $this->parseOffer($ancillaryResponse['offer']);
         }
 
-        if (isset($response['Availability'])) {
-            $this->parseAvailability($response['Availability']);
+        // Parse segments
+        if (isset($ancillaryResponse['segments'])) {
+            $this->segments = $this->parseSegments($ancillaryResponse['segments']);
         }
 
-        if (isset($response['Rules'])) {
-            $this->parseRules($response['Rules']);
+        // Parse passengers
+        if (isset($ancillaryResponse['passengers'])) {
+            $this->passengers = $this->parsePassengers($ancillaryResponse['passengers']);
+        }
+
+        // Parse service definitions
+        if (isset($ancillaryResponse['serviceDefinitions'])) {
+            $this->serviceDefinitions = $this->parseServiceDefinitions($ancillaryResponse['serviceDefinitions']);
+        }
+
+        // Parse price definitions
+        if (isset($ancillaryResponse['priceDefinitions'])) {
+            $this->priceDefinitions = $this->parsePriceDefinitions($ancillaryResponse['priceDefinitions']);
         }
     }
 
@@ -87,116 +120,281 @@ class AncillaryResponse implements SabreResponse
     {
         return array_map(function ($error) {
             return [
-                'code' => $error['Code'] ?? null,
-                'message' => $error['Message'] ?? 'Unknown error',
-                'type' => $error['Type'] ?? null,
-                'details' => $error['Details'] ?? null
+                'code' => $error['code'] ?? null,
+                'description' => $error['descriptionText'] ?? 'Unknown error',
+                'type' => $error['typeCode'] ?? null,
+                'owner' => $error['ownerName'] ?? null,
+                'url' => $error['url'] ?? null
             ];
-        }, (array) $errors['Error']);
+        }, $errors);
     }
 
-    private function parseServices(array $services): void
+    private function parseWarnings(array $warnings): array
     {
-        foreach ($services as $service) {
-            $this->services[] = [
-                'id' => $service['id'] ?? null,
-                'code' => $service['ServiceCode'] ?? null,
-                'name' => $service['ServiceName'] ?? null,
-                'description' => $service['Description'] ?? null,
-                'type' => $service['ServiceType'] ?? null,
-                'subType' => $service['ServiceSubType'] ?? null,
-                'group' => $service['Group'] ?? null,
-                'segment' => [
-                    'ref' => $service['SegmentRef'] ?? null,
-                    'eligible' => $service['SegmentEligible'] ?? true
-                ],
-                'passenger' => [
-                    'ref' => $service['PassengerRef'] ?? null,
-                    'eligible' => $service['PassengerEligible'] ?? true
-                ],
-                'pricing' => $this->parseServicePricing($service['Pricing'] ?? []),
-                'availability' => $this->parseServiceAvailability($service['Availability'] ?? []),
-                'rules' => $service['Rules'] ?? []
-            ];
-        }
-    }
-
-    private function parseServicePricing(array $pricing): array
-    {
-        return [
-            'amount' => $pricing['Amount'] ?? null,
-            'currency' => $pricing['Currency'] ?? null,
-            'fees' => array_map(function ($fee) {
-                return [
-                    'code' => $fee['Code'],
-                    'amount' => $fee['Amount'],
-                    'description' => $fee['Description'] ?? null
-                ];
-            }, $pricing['Fees'] ?? []),
-            'taxes' => array_map(function ($tax) {
-                return [
-                    'code' => $tax['Code'],
-                    'amount' => $tax['Amount']
-                ];
-            }, $pricing['Taxes'] ?? [])
-        ];
-    }
-
-    private function parseServiceAvailability(array $availability): array
-    {
-        return [
-            'status' => $availability['Status'] ?? null,
-            'quantity' => [
-                'available' => $availability['QuantityAvailable'] ?? null,
-                'maximum' => $availability['MaximumQuantity'] ?? null
-            ],
-            'restrictions' => $availability['Restrictions'] ?? [],
-            'timeLimit' => $availability['TimeLimit'] ?? null
-        ];
-    }
-
-    private function parsePricing(array $pricing): void
-    {
-        $this->pricing = [
-            'currency' => $pricing['Currency'] ?? null,
-            'subtotal' => $pricing['SubTotal'] ?? null,
-            'taxes' => $pricing['TotalTaxes'] ?? null,
-            'total' => $pricing['TotalAmount'] ?? null,
-            'breakdown' => array_map(function ($item) {
-                return [
-                    'type' => $item['Type'],
-                    'amount' => $item['Amount'],
-                    'details' => $item['Details'] ?? null
-                ];
-            }, $pricing['PriceBreakdown'] ?? [])
-        ];
-    }
-
-    private function parseAvailability(array $availability): void
-    {
-        $this->availability = [
-            'status' => $availability['Status'],
-            'restrictions' => $availability['Restrictions'] ?? [],
-            'segments' => array_map(function ($segment) {
-                return [
-                    'ref' => $segment['SegmentRef'],
-                    'status' => $segment['Status'],
-                    'available' => $segment['ServicesAvailable'] ?? []
-                ];
-            }, $availability['SegmentAvailability'] ?? [])
-        ];
-    }
-
-    private function parseRules(array $rules): void
-    {
-        $this->rules = array_map(function ($rule) {
+        return array_map(function ($warning) {
             return [
-                'code' => $rule['Code'],
-                'type' => $rule['Type'],
-                'description' => $rule['Description'],
-                'restrictions' => $rule['Restrictions'] ?? [],
-                'applicability' => $rule['Applicability'] ?? []
+                'code' => $warning['code'] ?? null,
+                'description' => $warning['descriptionText'] ?? null,
+                'owner' => $warning['ownerName'] ?? null
             ];
-        }, $rules);
+        }, $warnings);
+    }
+
+    private function parseOffer(array $offer): array
+    {
+        return [
+            'id' => $offer['offerId'] ?? null,
+            'other_services' => $this->parseOfferItems($offer['otherServices'] ?? [])
+        ];
+    }
+
+    private function parseOfferItems(array $items): array
+    {
+        return array_map(function ($item) {
+            return [
+                'id' => $item['offerItemId'] ?? null,
+                'service_definition_ref' => $item['serviceDefinitionRef'] ?? null,
+                'price_definition_ref' => $item['priceDefinitionRef'] ?? null,
+                'segment_refs' => $item['segmentRefs'] ?? [],
+                'passenger_refs' => $item['passengerRefs'] ?? []
+            ];
+        }, $items);
+    }
+
+    private function parseSegments(array $segments): array
+    {
+        return array_map(function ($segment) {
+            return [
+                'id' => $segment['id'] ?? null,
+                'booking_airline_code' => $segment['bookingAirlineCode'] ?? null,
+                'booking_flight_number' => $segment['bookingFlightNumber'] ?? null,
+                'departure_airport_code' => $segment['departureAirportCode'] ?? null,
+                'arrival_airport_code' => $segment['arrivalAirportCode'] ?? null,
+                'departure_date' => $segment['departureDate'] ?? null,
+                'operating_airline_code' => $segment['operatingAirlineCode'] ?? null,
+                'booking_class_code' => $segment['bookingClassCode'] ?? null
+            ];
+        }, $segments);
+    }
+
+    private function parsePassengers(array $passengers): array
+    {
+        return array_map(function ($passenger) {
+            return [
+                'id' => $passenger['passengerId'] ?? null,
+                'type_code' => $passenger['passengerTypeCode'] ?? null,
+                'title' => $passenger['title'] ?? null,
+                'given_name' => $passenger['givenName'] ?? null,
+                'surname' => $passenger['surname'] ?? null,
+                'middle_name' => $passenger['middleName'] ?? null,
+                'suffix_name' => $passenger['suffixName'] ?? null
+            ];
+        }, $passengers);
+    }
+
+    private function parseServiceDefinitions(array $serviceDefinitions): array
+    {
+        return array_map(function ($service) {
+            return [
+                'id' => $service['id'] ?? null,
+                'service_code' => $service['serviceCode'] ?? null,
+                'airline_code' => $service['airlineCode'] ?? null,
+                'commercial_name' => $service['commercialName'] ?? null,
+                'group_code' => $service['groupCode'] ?? null,
+                'owner_code' => $service['ownerCode'] ?? null,
+                'maximum_quantity' => $service['maximumQuantity'] ?? null,
+                'booking_method' => $service['bookingMethod'] ?? null,
+                'cabin_upgrade' => $this->parseCabinUpgrade($service['cabinUpgrade'] ?? null),
+                'description_text' => $this->parseDescriptionText($service['descriptionFreeText'] ?? [])
+            ];
+        }, $serviceDefinitions);
+    }
+
+    private function parseCabinUpgrade(?array $cabinUpgrade): ?array
+    {
+        if (!$cabinUpgrade) {
+            return null;
+        }
+
+        return [
+            'method_code' => $cabinUpgrade['methodCode'] ?? null,
+            'reservation_booking_designator' => $cabinUpgrade['reservationBookingDesignator'] ?? null
+        ];
+    }
+
+    private function parseDescriptionText(array $descriptions): array
+    {
+        return array_map(function ($description) {
+            return [
+                'id' => $description['id'] ?? null,
+                'text' => $description['text'] ?? null
+            ];
+        }, $descriptions);
+    }
+
+    private function parsePriceDefinitions(array $priceDefinitions): array
+    {
+        return array_map(function ($priceDefinition) {
+            return [
+                'id' => $priceDefinition['id'] ?? null,
+                'service_fee' => $this->parseServiceFee($priceDefinition['serviceFee'] ?? null)
+            ];
+        }, $priceDefinitions);
+    }
+
+    private function parseServiceFee(?array $serviceFee): ?array
+    {
+        if (!$serviceFee) {
+            return null;
+        }
+
+        return [
+            'unit_price' => $this->parsePriceElement($serviceFee['unitPrice'] ?? null),
+            'total_price' => $this->parsePriceElement($serviceFee['totalPrice'] ?? null)
+        ];
+    }
+
+    private function parsePriceElement(?array $priceElement): ?array
+    {
+        if (!$priceElement) {
+            return null;
+        }
+
+        return [
+            'sale_amount' => [
+                'amount' => $priceElement['saleAmount']['amount'] ?? null,
+                'currency' => $priceElement['saleAmount']['currencyCode'] ?? null
+            ],
+            'tax_summary' => $this->parseTaxSummary($priceElement['taxSummary'] ?? null)
+        ];
+    }
+
+    private function parseTaxSummary(?array $taxSummary): ?array
+    {
+        if (!$taxSummary) {
+            return null;
+        }
+
+        return [
+            'total_taxes' => [
+                'amount' => $taxSummary['taxesTotal']['amount'] ?? null,
+                'currency' => $taxSummary['taxesTotal']['currencyCode'] ?? null
+            ],
+            'taxes' => $this->parseTaxes($taxSummary['taxes'] ?? []),
+            'is_tax_exempt' => $taxSummary['isTaxExempt'] ?? false
+        ];
+    }
+
+    private function parseTaxes(array $taxes): array
+    {
+        return array_map(function ($tax) {
+            return [
+                'amount' => $tax['taxAmount']['amount'] ?? null,
+                'currency' => $tax['taxAmount']['currencyCode'] ?? null,
+                'tax_code' => $tax['taxCode'] ?? null,
+                'description' => $tax['taxDescription'] ?? null
+            ];
+        }, $taxes);
+    }
+
+    // Convenience method to categorize ancillaries
+    public function categorizeAncillaries(): array
+    {
+        $categories = [
+            'baggage' => [],
+            'meals' => [],
+            'special_services' => [],
+            'seat_upgrades' => [],
+            'other' => []
+        ];
+
+        foreach ($this->serviceDefinitions as $service) {
+            switch ($service['service_code']) {
+                case 'B': // Baggage
+                    $categories['baggage'][] = $service;
+                    break;
+                case 'M': // Meals
+                    $categories['meals'][] = $service;
+                    break;
+                case 'S': // Special Services
+                    $categories['special_services'][] = $service;
+                    break;
+                case 'U': // Seat Upgrades
+                    $categories['seat_upgrades'][] = $service;
+                    break;
+                default:
+                    $categories['other'][] = $service;
+            }
+        }
+
+        return $categories;
+    }
+
+    // Method to retrieve available ancillary services for a specific passenger
+    public function getPassengerAncillaries(string $passengerId): array
+    {
+        $passengerAncillaries = [];
+
+        // Find offer items for the specified passenger
+        $passengerOfferItems = array_filter(
+            $this->offer['other_services'] ?? [],
+            function ($item) use ($passengerId) {
+                return in_array($passengerId, $item['passenger_refs'] ?? []);
+            }
+        );
+
+        // Match offer items with service definitions
+        foreach ($passengerOfferItems as $offerItem) {
+            $serviceDefinition = $this->findServiceDefinitionById(
+                $offerItem['service_definition_ref']
+            );
+
+            if ($serviceDefinition) {
+                $priceDefinition = $this->findPriceDefinitionById(
+                    $offerItem['price_definition_ref']
+                );
+
+                $passengerAncillaries[] = [
+                    'service' => $serviceDefinition,
+                    'price' => $priceDefinition,
+                    'offer_item_id' => $offerItem['id'],
+                    'segment_refs' => $offerItem['segment_refs']
+                ];
+            }
+        }
+
+        return $passengerAncillaries;
+    }
+
+    // Helper method to find service definition by ID
+    private function findServiceDefinitionById(?string $id): ?array
+    {
+        if (!$id) {
+            return null;
+        }
+
+        foreach ($this->serviceDefinitions as $service) {
+            if ($service['id'] === $id) {
+                return $service;
+            }
+        }
+
+        return null;
+    }
+
+    // Helper method to find price definition by ID
+    private function findPriceDefinitionById(?string $id): ?array
+    {
+        if (!$id) {
+            return null;
+        }
+
+        foreach ($this->priceDefinitions as $price) {
+            if ($price['id'] === $id) {
+                return $price;
+            }
+        }
+
+        return null;
     }
 }

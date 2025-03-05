@@ -7,137 +7,96 @@ use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 
 class AncillaryRequest implements SabreRequest
 {
-    private string $requestType;
-    private array $party;
-    private array $request;
-    private ?array $paxSegmentRefIds = [];
-    private array $paxes = [];
+    private string $requestType = 'orderId';
+    private ?string $orderId = null;
+    private array $requestedSegmentRefs = [];
+    private array $requestedPaxRefs = [];
+    private ?string $groupCode = null;
 
-    public function __construct(string $requestType = 'payload')
+    // Point of Sale information
+    private ?string $agentDutyCode = '*';
+    private ?string $countryCode = 'US';
+    private ?string $cityCode = 'SFO';
+
+    public function setRequestType(string $type): self
     {
-        $this->requestType = $requestType;
-    }
-
-    public function setTravelAgencyParty(
-        string $pseudoCityId,
-        string $agencyId
-    ): self {
-        $this->party = [
-            'sender' => [
-                'travelAgency' => [
-                    'pseudoCityID' => $pseudoCityId,
-                    'agencyID' => $agencyId
-                ]
-            ]
-        ];
+        $this->requestType = $type;
         return $this;
     }
 
-    public function addFlightSegment(
-        string $segmentId,
-        string $origin,
-        string $destination,
-        string $departureDate,
-        string $carrierCode,
-        string $flightNumber,
-        string $bookingClass,
-        ?string $operatingCarrierCode = null
-    ): self {
-        $this->paxSegmentRefIds[] = $segmentId;
-
-        if (!isset($this->request['originDest'])) {
-            $this->request['originDest'] = [
-                'paxJourney' => [
-                    'paxSegments' => []
-                ]
-            ];
-        }
-
-        $segment = [
-            'paxSegmentId' => $segmentId,
-            'departure' => [
-                'locationCode' => $origin,
-                'aircraftScheduledDate' => [
-                    'date' => $departureDate
-                ]
-            ],
-            'arrival' => [
-                'locationCode' => $destination,
-                'aircraftScheduledDate' => [
-                    'date' => $departureDate
-                ]
-            ],
-            'marketingCarrierInfo' => [
-                'bookingCode' => $bookingClass,
-                'carrierCode' => $carrierCode,
-                'carrierFlightNumber' => $flightNumber
-            ],
-            'cabinType' => [
-                'cabinTypeCode' => 'Y',
-                'cabinTypeName' => 'Economy'
-            ]
-        ];
-
-        if ($operatingCarrierCode) {
-            $segment['operatingCarrierInfo'] = [
-                'bookingCode' => $bookingClass,
-                'carrierCode' => $operatingCarrierCode,
-                'carrierFlightNumber' => $flightNumber
-            ];
-        } else {
-            $segment['operatingCarrierInfo'] = $segment['marketingCarrierInfo'];
-        }
-
-        $this->request['originDest']['paxJourney']['paxSegments'][] = $segment;
-        return $this;
-    }
-
-    public function addPassenger(
-        string $paxId,
-        string $ptc,
-        ?string $birthDate = null,
-        ?string $givenName = null,
-        ?string $surname = null
-    ): self {
-        $passenger = [
-            'paxID' => $paxId,
-            'ptc' => $ptc
-        ];
-
-        if ($birthDate) {
-            $passenger['birthday'] = $birthDate;
-        }
-
-        if ($givenName) {
-            $passenger['givenName'] = $givenName;
-        }
-
-        if ($surname) {
-            $passenger['surname'] = $surname;
-        }
-
-        $this->paxes[] = $passenger;
-        return $this;
-    }
-
-    public function setCurrency(string $currency): self
+    public function getRequestType(): string
     {
-        $this->request['currency'] = $currency;
+        return $this->requestType;
+    }
+
+    public function setOrderId(string $orderId): self
+    {
+        $this->orderId = $orderId;
+        $this->requestType = 'orderId';
+        return $this;
+    }
+
+    public function getOrderId(): ?string
+    {
+        return $this->orderId;
+    }
+
+    public function addRequestedSegmentRef(string $segmentRef): self
+    {
+        $this->requestedSegmentRefs[] = $segmentRef;
+        return $this;
+    }
+
+    public function getRequestedSegmentRefs(): array
+    {
+        return $this->requestedSegmentRefs;
+    }
+
+    public function addRequestedPaxRef(string $paxRef): self
+    {
+        $this->requestedPaxRefs[] = $paxRef;
+        return $this;
+    }
+
+    public function getRequestedPaxRefs(): array
+    {
+        return $this->requestedPaxRefs;
+    }
+
+    public function setGroupCode(?string $groupCode): self
+    {
+        $this->groupCode = $groupCode;
+        return $this;
+    }
+
+    public function getGroupCode(): ?string
+    {
+        return $this->groupCode;
+    }
+
+    // Point of Sale Setters
+    public function setAgentDutyCode(?string $code): self
+    {
+        $this->agentDutyCode = $code;
+        return $this;
+    }
+
+    public function setCountryCode(?string $code): self
+    {
+        $this->countryCode = $code;
+        return $this;
+    }
+
+    public function setCityCode(?string $code): self
+    {
+        $this->cityCode = $code;
         return $this;
     }
 
     public function validate(): bool
     {
-        if (empty($this->party)) {
-            throw new SabreApiException('Travel agency party information is required');
-        }
-
-        if (empty($this->request['originDest']['paxJourney']['paxSegments'])) {
-            throw new SabreApiException('At least one flight segment is required');
-        }
-
-        if (empty($this->paxes)) {
-            throw new SabreApiException('At least one passenger is required');
+        if ($this->requestType === 'orderId' && empty($this->orderId)) {
+            throw new SabreApiException('Order ID is required for orderId request type');
         }
 
         return true;
@@ -149,15 +108,26 @@ class AncillaryRequest implements SabreRequest
 
         $request = [
             'requestType' => $this->requestType,
-            'party' => $this->party,
-            'request' => array_merge(
-                [
-                    'paxSegmentRefIds' => $this->paxSegmentRefIds,
-                    'paxes' => $this->paxes
-                ],
-                $this->request
-            )
+            'request' => [
+                // Basic order request
+                'orderId' => $this->orderId
+            ]
         ];
+
+        // Optional segment references
+        if (!empty($this->requestedSegmentRefs)) {
+            $request['request']['requestedSegmentRefs'] = $this->requestedSegmentRefs;
+        }
+
+        // Optional passenger references
+        if (!empty($this->requestedPaxRefs)) {
+            $request['request']['requestedPaxRefs'] = $this->requestedPaxRefs;
+        }
+
+        // Optional group code
+        if ($this->groupCode) {
+            $request['request']['groupCode'] = $this->groupCode;
+        }
 
         return $request;
     }
