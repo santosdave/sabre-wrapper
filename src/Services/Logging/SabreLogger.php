@@ -65,15 +65,15 @@ class SabreLogger implements LoggerInterface
         //     $this->logger->pushHandler($requestHandler);
         // }
 
-        // if ($this->config['separate_files']['errors']) {
-        //     $errorHandler = new RotatingFileHandler(
-        //         storage_path('logs/sabre_errors.log'),
-        //         $this->config['days'],
-        //         Logger::ERROR
-        //     );
-        //     $errorHandler->setFormatter(new JsonFormatter());
-        //     $this->logger->pushHandler($errorHandler);
-        // }
+        if ($this->config['separate_files']['errors']) {
+            $errorHandler = new RotatingFileHandler(
+                storage_path('logs/sabre_errors.log'),
+                $this->config['days'],
+                Logger::ERROR
+            );
+            $errorHandler->setFormatter(new JsonFormatter());
+            $this->logger->pushHandler($errorHandler);
+        }
     }
 
     public function logRequest(string $service, string $action, array $request, array $context = []): void
