@@ -228,11 +228,14 @@ class CreateBookingRequest implements SabreRequest
     private function sanitizeTravelerData(array $traveler): array
     {
         $sanitized = [
-            'givenName' => $traveler['givenName'] ?? null,
-            'surname' => $traveler['surname'] ?? null,
-            'passengerCode' => $traveler['passengerCode'] ?? 'ADT',
-            'birthDate' => $traveler['birthDate'] ?? null
+            'givenName'  => $traveler['givenName'] ?? null,
+            'surname'    => $traveler['surname'] ?? null,
+            'birthDate'  => $traveler['birthDate'] ?? null
         ];
+
+        if (isset($traveler['passengerCode'])) {
+            $sanitized['passengerCode'] = $traveler['passengerCode'];
+        }
 
         // Optional fields
         if (isset($traveler['id'])) {

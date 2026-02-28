@@ -11,8 +11,13 @@ class AvailabilityResponse implements SabreResponse
     private bool $success = false;
     private array $flights = [];
 
-    public function __construct(array $response, string $type = 'rest')
+    private string $defaultAuthMethod;
+
+    public function __construct(array $response, string $type)
     {
+        $this->defaultAuthMethod = config('sabre.auth.default_method', 'rest');
+
+        $type = $type ?? $this->defaultAuthMethod;
         $this->parseResponse($response, $type);
     }
 

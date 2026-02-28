@@ -169,7 +169,7 @@ class SeatMapResponse implements SabreResponse
                     $seats[] = [
                         'row' => $row['row'],
                         'column' => $seat['column'],
-                        'characteristics' => $seat['characteristics']
+                        'characteristics' => isset($seat['characteristics'])
                             ? array_column($seat['characteristics'], 'code')
                             : [],
                         'occupation_status' => $seat['occupationStatusCode'] ?? null,

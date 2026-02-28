@@ -10,6 +10,8 @@ class AuthenticationService
 {
     private SessionManager $sessionManager;
 
+    private string $defaultAuthMethod;
+
     public function __construct(
         SessionManager $sessionManager,
         private string $username,
@@ -19,13 +21,15 @@ class AuthenticationService
         private string $clientId,
         private string $clientSecret
     ) {
+        $this->defaultAuthMethod = config('sabre.auth.default_method', 'rest');
         $this->sessionManager = $sessionManager;
     }
 
 
 
-    public function getToken(string $type = 'rest'): string
+    public function getToken(string $type): string
     {
+        $type = $type ?? $this->defaultAuthMethod;
         switch ($type) {
             case 'rest':
                 return $this->getRestToken();

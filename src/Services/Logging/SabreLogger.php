@@ -43,7 +43,10 @@ class SabreLogger implements LoggerInterface
             $this->config['days'],
             $this->config['level']
         );
-        $mainHandler->setFormatter(new JsonFormatter());
+        $mainFormatter = new JsonFormatter();
+        $mainFormatter->setMaxNormalizeDepth(20);        // ← add this
+        $mainFormatter->setMaxNormalizeItemCount(1000);  // ← and this
+        $mainHandler->setFormatter($mainFormatter);
         $this->logger->pushHandler($mainHandler);
 
         // Separate handlers for different types of logs
@@ -52,7 +55,10 @@ class SabreLogger implements LoggerInterface
                 storage_path('logs/sabre_auth.log'),
                 $this->config['days']
             );
-            $authHandler->setFormatter(new JsonFormatter());
+            $authFormatter = new JsonFormatter();
+            $authFormatter->setMaxNormalizeDepth(20);        // ← add this
+            $authFormatter->setMaxNormalizeItemCount(1000);  // ← and this
+            $authHandler->setFormatter($authFormatter);
             $this->logger->pushHandler($authHandler);
         }
 
@@ -71,7 +77,10 @@ class SabreLogger implements LoggerInterface
                 $this->config['days'],
                 Logger::ERROR
             );
-            $errorHandler->setFormatter(new JsonFormatter());
+            $errorFormatter = new JsonFormatter();
+            $errorFormatter->setMaxNormalizeDepth(20);        // ← add this
+            $errorFormatter->setMaxNormalizeItemCount(1000);  // ← and this
+            $errorHandler->setFormatter($errorFormatter);
             $this->logger->pushHandler($errorHandler);
         }
     }

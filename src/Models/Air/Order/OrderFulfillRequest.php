@@ -38,6 +38,16 @@ class OrderFulfillRequest implements SabreRequest
         return $this;
     }
 
+    public function setPaymentCash(): self
+    {
+        $this->paymentInfo = [
+            'paymentMethod' => [
+                'paymentCash' => new \stdClass() // or []
+            ]
+        ];
+        return $this;
+    }
+
     public function setAmount(float $amount, string $currency): self
     {
         $this->paymentInfo['amount'] = [

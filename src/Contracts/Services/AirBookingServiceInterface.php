@@ -13,6 +13,8 @@ use Santosdave\SabreWrapper\Models\Air\PassengerDetailsRequest;
 interface AirBookingServiceInterface
 {
     public function createPnr(CreatePnrRequest $request): CreatePnrResponse;
+
+    public function createPnrRaw(array $payload): CreatePnrResponse;
     public function enhancedAirBook(EnhancedAirBookRequest $request): array;
     public function addPassengerDetails(PassengerDetailsRequest $request): array;
     public function cancelPnr(string $pnr): bool;

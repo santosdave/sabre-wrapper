@@ -19,8 +19,8 @@ class BookingService extends BaseRestService implements AirBookingServiceInterfa
     {
         try {
             $response = $this->client->post(
-                '/v2.4.0/passenger/records',
-                $request->toArray()
+                '/v2.4.0/passenger/records?mode=create',
+                $request->toSoapArray()
             );
             return new CreatePnrResponse($response, 'rest');
         } catch (\Exception $e) {
@@ -31,6 +31,21 @@ class BookingService extends BaseRestService implements AirBookingServiceInterfa
         }
     }
 
+    public function createPnrRaw(array $payload): CreatePnrResponse
+    {
+        try {
+            $response = $this->client->post(
+                '/v2.4.0/passenger/records?mode=create',
+                $payload
+            );
+            return new CreatePnrResponse($response, 'rest');
+        } catch (\Exception $e) {
+            throw new SabreApiException(
+                "REST: Failed to create PNR: " . $e->getMessage(),
+                $e->getCode()
+            );
+        }
+    }
     public function enhancedAirBook(EnhancedAirBookRequest $request): array
     {
         try {

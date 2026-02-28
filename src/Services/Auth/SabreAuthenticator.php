@@ -21,6 +21,8 @@ class SabreAuthenticator implements TokenManagerInterface
 
     private XMLBuilder $xmlBuilder;
 
+    private string $defaultAuthMethod;
+
     public function __construct(
         private string $username,
         private string $password,
@@ -32,15 +34,25 @@ class SabreAuthenticator implements TokenManagerInterface
     ) {
         $this->tokenRotator = new TokenRotator();
         $this->lockService = new DistributedLockService();
-        $this->sessionManager = new SessionManager($this->lockService);
+
         $this->retryHandler = new AuthenticationRetryHandler();
         $this->xmlBuilder = new XMLBuilder();
         $this->logger = $logger ?? app(SabreLogger::class);
         $this->initializeCacheKeys();
+
+        $this->defaultAuthMethod = config('sabre.auth.default_method', 'rest');
+
+        $this->sessionManager = new SessionManager(
+            $this->lockService,
+            function () {
+                return $this->requestNewSoapSession();
+            } // ← Session creation callback
+        );
     }
 
-    public function getToken(string $type = 'rest'): string
+    public function getToken(string $type): string
     {
+        $type = $type ?? $this->defaultAuthMethod;
         return $this->retryHandler->executeWithRetry(function () use ($type) {
             $this->logger->logAuth($type, 'get_token', [
                 'environment' => $this->environment,
@@ -49,14 +61,15 @@ class SabreAuthenticator implements TokenManagerInterface
             ]);
 
             try {
-                if ($type === 'rest') {
-                    return $this->getRestToken();
-                } elseif ($type === 'soap_session') {
-                    return $this->sessionManager->getCurrentSession();
-                } elseif ($type === 'soap_stateless') {
-                    return $this->createSoapToken();
-                } else {
-                    throw new \InvalidArgumentException("Invalid token type: {$type}");
+                switch ($type) {
+                    case 'rest':
+                        return $this->getRestToken();
+                    case 'soap_session':
+                        return $this->getSoapSessionToken();  // ← NEW: Follow REST pattern
+                    case 'soap_stateless':
+                        return $this->getSoapStatelessToken(); // ← NEW: Follow REST pattern
+                    default:
+                        throw new \InvalidArgumentException("Invalid token type: {$type}");
                 }
             } catch (\Exception $e) {
                 $this->logger->logError($e, [
@@ -66,6 +79,28 @@ class SabreAuthenticator implements TokenManagerInterface
                 throw $e;
             }
         }, $type);
+    }
+
+    private function getSoapStatelessToken(): string
+    {
+        $cacheKey = $this->cacheKeys['soap_stateless'];
+
+        // Check cache first (same as REST)
+        if ($token = Cache::get($cacheKey)) {
+            if ($this->tokenRotator->isValidToken('soap_stateless', $token) && !$this->isTokenExpired('soap_stateless')) {
+                return $token;  // Return cached token
+            }
+        }
+
+        // Refresh if expired/invalid (same as REST)
+        $this->refreshToken('soap_stateless');
+        return Cache::get($cacheKey);
+    }
+
+    private function getSoapSessionToken(): string
+    {
+        // For sessions, we use the session manager but still follow caching principles
+        return $this->sessionManager->getCurrentSession();
     }
 
     private function createSoapToken(): string
@@ -109,8 +144,9 @@ class SabreAuthenticator implements TokenManagerInterface
         }
     }
 
-    public function refreshToken(string $type = 'rest'): void
+    public function refreshToken(string $type): void
     {
+        $type = $type ?? $this->defaultAuthMethod;
         $this->lockService->withLock("refresh_token_{$type}", function () use ($type) {
             $currentToken = Cache::get($this->cacheKeys[$type]);
             $startTime = microtime(true);
@@ -121,10 +157,10 @@ class SabreAuthenticator implements TokenManagerInterface
                         $newToken = $this->requestNewRestToken();
                         break;
                     case 'soap_session':
-                        $newToken = $this->createNewSoapSession();
+                        $newToken = $this->requestNewSoapSession(); // ← FIXED: New method name
                         break;
                     case 'soap_stateless':
-                        $newToken = $this->createSoapToken();
+                        $newToken = $this->requestNewSoapToken(); // ← FIXED: New method name  
                         break;
                     default:
                         throw new \InvalidArgumentException("Invalid token type: {$type}");
@@ -156,8 +192,9 @@ class SabreAuthenticator implements TokenManagerInterface
         throw new \RuntimeException('Soap session creation not implemented');
     }
 
-    public function isTokenExpired(string $type = 'rest'): bool
+    public function isTokenExpired(string $type): bool
     {
+        $type = $type ?? $this->defaultAuthMethod;
         $token = Cache::get($this->cacheKeys[$type]);
         if (!$token) {
             return true;
@@ -169,8 +206,9 @@ class SabreAuthenticator implements TokenManagerInterface
         return !$tokenData || ($tokenData['expires_at'] - time()) <= $threshold;
     }
 
-    public function getAuthorizationHeader(string $type = 'rest'): string
+    public function getAuthorizationHeader(string $type): string
     {
+        $type = $type ?? $this->defaultAuthMethod;
         $token = $this->getToken($type);
         return "Bearer {$token}";
     }
@@ -224,6 +262,90 @@ class SabreAuthenticator implements TokenManagerInterface
                 "Failed to obtain REST token: {$e->getMessage()}",
                 401,
                 'rest'
+            );
+        }
+    }
+
+    private function requestNewSoapToken(): string
+    {
+        try {
+            $client = new \SoapClient(null, [
+                'location' => config("sabre.endpoints.{$this->environment}.soap"),
+                'uri' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                'trace' => true
+            ]);
+
+            // Use our fixed XMLBuilder with Client ID support
+            $request = $this->xmlBuilder->buildTokenCreateRequest([
+                'username' => $this->username,
+                'password' => $this->password,
+                'pcc' => $this->pcc,
+                'clientId' => $this->clientId,      // ✅ Client ID support
+                'clientSecret' => $this->clientSecret, // ✅ Client ID support
+            ]);
+
+            $response = $client->__doRequest(
+                $request,
+                config("sabre.endpoints.{$this->environment}.soap"),
+                'TokenCreateRQ',
+                SOAP_1_1
+            );
+
+            // Parse binary security token from response
+            $xml = new \SimpleXMLElement($response);
+            $token = (string)$xml->xpath('//wsse:BinarySecurityToken')[0];
+
+            if (empty($token)) {
+                throw new SabreAuthenticationException('Invalid SOAP token response');
+            }
+
+            return $token;
+        } catch (\Exception $e) {
+            throw new SabreAuthenticationException(
+                "SOAP token creation failed: " . $e->getMessage(),
+                401
+            );
+        }
+    }
+
+    public function requestNewSoapSession(): string
+    {
+        try {
+            $client = new \SoapClient(null, [
+                'location' => config("sabre.endpoints.{$this->environment}.soap"),
+                'uri' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                'trace' => true
+            ]);
+
+            // Use our fixed XMLBuilder with Client ID support
+            $request = $this->xmlBuilder->buildSessionCreateRequest([
+                'username' => $this->username,
+                'password' => $this->password,
+                'pcc' => $this->pcc,
+                'clientId' => $this->clientId,      // ✅ Client ID support
+                'clientSecret' => $this->clientSecret, // ✅ Client ID support
+            ]);
+
+            $response = $client->__doRequest(
+                $request,
+                config("sabre.endpoints.{$this->environment}.soap"),
+                'SessionCreateRQ',
+                SOAP_1_1
+            );
+
+            // Parse binary security token from response
+            $xml = new \SimpleXMLElement($response);
+            $token = (string)$xml->xpath('//wsse:BinarySecurityToken')[0];
+
+            if (empty($token)) {
+                throw new SabreAuthenticationException('Invalid SOAP session response');
+            }
+
+            return $token;
+        } catch (\Exception $e) {
+            throw new SabreAuthenticationException(
+                "SOAP session creation failed: " . $e->getMessage(),
+                401
             );
         }
     }
