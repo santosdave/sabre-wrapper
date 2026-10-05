@@ -4,6 +4,7 @@ namespace Santosdave\SabreWrapper\Services\Auth;
 
 use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 use GuzzleHttp\Client;
+use Santosdave\SabreWrapper\Http\HttpClientFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Santosdave\SabreWrapper\Contracts\Auth\TokenManagerInterface;
@@ -230,7 +231,7 @@ class SabreAuthenticator implements TokenManagerInterface
     private function requestNewRestToken(): string
     {
         try {
-            $client = new Client([
+            $client = app(HttpClientFactory::class)->make([
                 'base_uri' => config("sabre.endpoints.{$this->environment}.rest")
             ]);
 

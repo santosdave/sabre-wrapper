@@ -3,6 +3,7 @@
 namespace Santosdave\SabreWrapper\Services\Auth;
 
 use GuzzleHttp\Client;
+use Santosdave\SabreWrapper\Http\HttpClientFactory;
 use InvalidArgumentException;
 use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 
@@ -78,7 +79,7 @@ class AuthenticationService
 
     private function requestNewRestToken(): string
     {
-        $client = new Client([
+        $client = app(HttpClientFactory::class)->make([
             'base_uri' => config("sabre.endpoints.{$this->environment}.rest")
         ]);
 

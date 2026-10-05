@@ -3,6 +3,7 @@
 namespace Santosdave\SabreWrapper\Http\Rest;
 
 use GuzzleHttp\Client;
+use Santosdave\SabreWrapper\Http\HttpClientFactory;
 use Santosdave\SabreWrapper\Contracts\Auth\TokenManagerInterface;
 use Santosdave\SabreWrapper\Exceptions\SabreApiException;
 use Santosdave\SabreWrapper\Services\Core\RetryService;
@@ -25,7 +26,7 @@ class RestClient
 
     private function setupClient(): void
     {
-        $this->client = new Client([
+        $this->client = app(HttpClientFactory::class)->make([
             'base_uri' => config("sabre.endpoints.{$this->environment}.rest"),
             'http_errors' => false,
             'timeout' => config('sabre.request.timeout', 30)
