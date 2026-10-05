@@ -18,11 +18,23 @@ class FakeSabre
 
     public int $airlineStatus = 200;
 
+    /** @var array<string, list<int>> path => statuses for its next calls (then 200 with {}) */
+    public array $statuses = [];
+
     private int $tokens = 0;
 
     public function __invoke(RequestInterface $request, array $options): PromiseInterface
     {
         $this->requests[] = $request;
+
+        $path = $request->getUri()->getPath();
+        if (array_key_exists($path, $this->statuses)) {
+            $status = array_shift($this->statuses[$path]) ?? 200;
+
+            return Create::promiseFor($status === 200
+                ? self::json(200, ['confirmationId' => 'ABC123'])
+                : self::json($status, ['errors' => [['category' => 'SERVICE', 'type' => 'UNAVAILABLE', 'description' => "Error {$status}"]]]));
+        }
 
         if ($request->getUri()->getPath() === '/v3/auth/token') {
             $this->tokens++;

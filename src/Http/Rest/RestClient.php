@@ -48,7 +48,7 @@ class RestClient
         $startTime = microtime(true);
         $requestId = uniqid('req_');
 
-        return $this->retryService->execute(function () use ($method, $endpoint, $options, $startTime, $requestId) {
+        $operation = function () use ($method, $endpoint, $options, $startTime, $requestId) {
             try {
                 // Add headers including authorization
                 $options['headers'] = array_merge(
@@ -112,7 +112,29 @@ class RestClient
                 ]);
                 throw $e;
             }
-        });
+        };
+
+        // Only a read is sent again after a failure. A write that failed (5xx, timeout) may
+        // already have been applied, and sending it again could book or cancel twice.
+        return self::isRead($method, $endpoint) ? $this->retryService->execute($operation) : $operation();
+    }
+
+    /**
+     * Calls that change nothing at Sabre. Most Sabre reads are POSTs, so they are named.
+     */
+    private static function isRead(string $method, string $endpoint): bool
+    {
+        if (strtoupper($method) === 'GET') {
+            return true;
+        }
+
+        foreach (['/offers/shop', '/offers/price', '/offers/getseats', '/trip/orders/getBooking', '/orders/view', '/revalidate', '/lists/'] as $read) {
+            if (str_contains($endpoint, $read)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getDefaultHeaders(): array
