@@ -7,6 +7,12 @@ use Santosdave\SabreWrapper\Exceptions\Auth\SabreAuthenticationException;
 
 class AuthenticationRetryHandler
 {
+    /**
+     * @param  TokenRotator|null  $rotator  the account's tokens, cleared on an authentication
+     *                                      failure; without it the old app-wide list is cleared
+     */
+    public function __construct(private ?TokenRotator $rotator = null) {}
+
     public function executeWithRetry(callable $operation, string $type): mixed
     {
         $attempts = 0;
@@ -26,7 +32,7 @@ class AuthenticationRetryHandler
                 usleep($delay * 1000);
 
                 // Force token refresh
-                Cache::forget("sabre_token_{$type}");
+                $this->rotator !== null ? $this->rotator->cleanup($type) : Cache::forget("sabre_token_{$type}");
             }
         }
 

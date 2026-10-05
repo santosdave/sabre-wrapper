@@ -33,10 +33,13 @@ class SabreAuthenticator implements TokenManagerInterface
         private string $clientSecret,
         ?SabreLogger $logger = null
     ) {
-        $this->tokenRotator = new TokenRotator();
-        $this->lockService = new DistributedLockService();
+        // Everything this authenticator remembers or locks is for its own account, so several
+        // accounts in one application never invalidate each other's tokens or wait on each other.
+        $account = "{$this->username}_{$this->pcc}";
+        $this->tokenRotator = new TokenRotator($account);
+        $this->lockService = new DistributedLockService($account);
 
-        $this->retryHandler = new AuthenticationRetryHandler();
+        $this->retryHandler = new AuthenticationRetryHandler($this->tokenRotator);
         $this->xmlBuilder = new XMLBuilder();
         $this->logger = $logger ?? app(SabreLogger::class);
         $this->initializeCacheKeys();
@@ -167,9 +170,9 @@ class SabreAuthenticator implements TokenManagerInterface
                         throw new \InvalidArgumentException("Invalid token type: {$type}");
                 }
 
-                if ($currentToken) {
-                    $this->tokenRotator->rotateToken($type, $currentToken, $newToken);
-                }
+                // Every new token is registered, the first one included: before, the first was
+                // not, so the next call treated it as invalid and fetched a second one.
+                $this->tokenRotator->rotateToken($type, (string) $currentToken, $newToken);
 
                 $this->cacheToken($type, $newToken);
 
