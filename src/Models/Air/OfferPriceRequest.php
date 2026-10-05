@@ -50,8 +50,8 @@ class OfferPriceRequest implements SabreRequest
      * @return self
      */
     public function setCreditCard(
-        string $cardType = null,
-        string $binNumber = null,
+        ?string $cardType = null,
+        ?string $binNumber = null,
         ?string $subCode = null
     ): self {
         $this->formOfPayment = array_filter([

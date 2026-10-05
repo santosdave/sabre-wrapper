@@ -62,7 +62,7 @@ class RateLimitService
         ];
     }
 
-    public function attempt(string $key, int $maxAttempts = null, int $decayMinutes = null): bool
+    public function attempt(string $key, ?int $maxAttempts = null, ?int $decayMinutes = null): bool
     {
         if (!$this->config['enabled']) {
             return true;

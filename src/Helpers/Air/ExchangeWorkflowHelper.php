@@ -21,7 +21,7 @@ class ExchangeWorkflowHelper
         string $orderId,
         array $itemsToExchange,
         array $newItinerary,
-        array $paymentInfo = null
+        ?array $paymentInfo = null
     ): OrderExchangeResponse {
         try {
             // Step 1: Get exchange quote

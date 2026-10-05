@@ -500,7 +500,7 @@ class HealthCheckService
         return (int) Cache::get("sabre_processing_{$queue}", 0);
     }
 
-    public function resetErrorCount(string $service = null): void
+    public function resetErrorCount(?string $service = null): void
     {
         if ($service) {
             Cache::forget("sabre_errors_{$service}_" . now()->format('Y-m-d-H'));
